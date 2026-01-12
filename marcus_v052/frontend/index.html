@@ -1,32 +1,202 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Marcus v052 — Life Globe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marcus — Personal Knowledge Agent</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div id="topbar">
-    <div class="brand">Marcus — Life Globe</div>
-    <div id="status">Status: <span id="status-text">starting</span></div>
-  </div>
-  <div id="layout">
-    <div id="globe-pane">
-      <canvas id="globe"></canvas>
+  <!-- TOP NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <div class="navbar-left">
+        <h1 class="brand">
+          <span class="brand-icon">◉</span>
+          <span>Marcus</span>
+        </h1>
+        <p class="tagline">Your offline AI research agent</p>
+      </div>
+      <div class="navbar-right">
+        <div class="status-indicator">
+          <span class="status-dot" id="status-dot"></span>
+          <span class="status-text" id="status-text">Initializing</span>
+        </div>
+        <button class="btn-icon" id="btn-settings" title="Settings">⚙️</button>
+      </div>
     </div>
-    <div id="chat-pane">
-      <div id="chat-log"></div>
-      <form id="chat-form">
-        <input id="chat-input" placeholder="Ask Marcus..." autocomplete="off">
-        <button type="submit">Send</button>
-      </form>
-      <div id="upload-area">
-        <input type="file" id="fileInput" accept=".txt,.pdf" title="Attach a document (TXT or PDF)" aria-label="Attach a document">
-        <button id="uploadBtn">Upload</button>
+  </nav>
+
+  <!-- MAIN LAYOUT -->
+  <div class="main-container">
+    <!-- LEFT SIDEBAR: KNOWLEDGE GRAPH -->
+    <aside class="sidebar sidebar-left">
+      <div class="sidebar-header">
+        <h2>Knowledge Graph</h2>
+        <button class="btn-icon" id="btn-refresh-graph" title="Refresh">🔄</button>
+      </div>
+      <div class="graph-stats">
+        <div class="stat">
+          <div class="stat-value" id="stat-documents">0</div>
+          <div class="stat-label">Documents</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-concepts">0</div>
+          <div class="stat-label">Concepts</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-connections">0</div>
+          <div class="stat-label">Connections</div>
+        </div>
+      </div>
+      <div class="graph-container" id="graph-container">
+        <canvas id="graph-canvas"></canvas>
+      </div>
+      <div class="graph-legend">
+        <div class="legend-item">
+          <span class="legend-color" style="background: #00e6ff;"></span>
+          <span>Concept</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background: #7c00ff;"></span>
+          <span>Document</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background: #ff006e;"></span>
+          <span>Connection</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER: DOCUMENT MANAGEMENT -->
+    <section class="main-content">
+      <!-- UPLOAD SECTION -->
+      <div class="upload-section">
+        <div class="upload-box" id="drop-zone">
+          <div class="upload-icon">📄</div>
+          <h3>Add Documents</h3>
+          <p>Drag files here or click to browse</p>
+          <div class="upload-formats">Supports: PDF, TXT, DOCX</div>
+          <input type="file" id="file-input" multiple accept=".pdf,.txt,.docx" style="display:none">
+          <button class="btn btn-primary" id="btn-browse">Browse Files</button>
+        </div>
+        <div class="upload-progress" id="upload-progress" style="display:none;">
+          <div class="progress-item" id="progress-template" style="display:none;">
+            <span class="progress-filename"></span>
+            <div class="progress-bar">
+              <div class="progress-fill"></div>
+            </div>
+            <span class="progress-status"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOCUMENTS LIST -->
+      <div class="documents-section">
+        <h2>Uploaded Documents</h2>
+        <div class="documents-grid" id="documents-grid">
+          <div class="empty-state">
+            <div class="empty-icon">📚</div>
+            <p>No documents yet. Upload your first document to build your knowledge graph.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENT ACTIVITY -->
+      <div class="activity-section">
+        <h2>Recent Activity</h2>
+        <div class="activity-log" id="activity-log">
+          <div class="activity-item">
+            <span class="activity-time">Just now</span>
+            <span class="activity-text">Marcus initialized</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SIDEBAR: CHAT -->
+    <aside class="sidebar sidebar-right">
+      <div class="sidebar-header">
+        <h2>Chat Agent</h2>
+      </div>
+
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <div class="message system">
+            <div class="message-content">
+              <strong>Marcus:</strong> I'm ready to help. Upload documents to start building your knowledge graph, then ask me questions about what you've learned.
+            </div>
+          </div>
+        </div>
+
+        <form class="chat-input-form" id="chat-form">
+          <div class="chat-input-wrapper">
+            <input
+              type="text"
+              id="chat-input"
+              class="chat-input"
+              placeholder="Ask me anything..."
+              autocomplete="off"
+              spellcheck="true"
+            >
+            <button type="submit" class="btn-send" title="Send message">
+              <span>⏎</span>
+            </button>
+          </div>
+          <div class="chat-hints">
+            <button type="button" class="hint" data-hint="Summarize what I've uploaded">Summarize</button>
+            <button type="button" class="hint" data-hint="Find connections between concepts">Find patterns</button>
+            <button type="button" class="hint" data-hint="Create a study guide">Study guide</button>
+          </div>
+        </form>
+      </div>
+    </aside>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal" id="settings-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button class="btn-close" id="btn-close-settings">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-group">
+          <label>API Port</label>
+          <input type="number" id="setting-port" value="8000" min="1024" max="65535">
+        </div>
+        <div class="setting-group">
+          <label>LLM Model</label>
+          <select id="setting-model">
+            <option value="mistral">Mistral (Fast)</option>
+            <option value="neural-chat">Neural Chat (Balanced)</option>
+            <option value="llama2">Llama 2 (Accurate)</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label>
+            <input type="checkbox" id="setting-auto-summarize" checked>
+            Auto-summarize on upload
+          </label>
+        </div>
+        <div class="setting-group">
+          <label>
+            <input type="checkbox" id="setting-show-reasoning" checked>
+            Show reasoning process
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-reset-settings">Reset to Defaults</button>
+        <button class="btn btn-primary" id="btn-save-settings">Save</button>
       </div>
     </div>
   </div>
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- SCRIPTS -->
   <script type="module" src="/static/app.js"></script>
 </body>
 </html>
