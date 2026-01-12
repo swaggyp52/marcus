@@ -43,6 +43,46 @@ param(
 $ErrorActionPreference = "Stop"
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 
+# Safe native command invoker - handles git stderr without crashing on exit 0
+function Invoke-SafeNative {
+    param(
+        [Parameter(Mandatory=$true)][string]$FilePath,
+        [string[]]$Arguments = @(),
+        [switch]$AllowStderrWhenExitZero
+    )
+    
+    # Use Start-Process to capture stdout/stderr separately
+    $outFile = [System.IO.Path]::GetTempFileName()
+    $errFile = [System.IO.Path]::GetTempFileName()
+    
+    try {
+        $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments `
+            -RedirectStandardOutput $outFile `
+            -RedirectStandardError $errFile `
+            -NoNewWindow -PassThru -Wait
+        
+        $stdout = Get-Content $outFile -Raw
+        $stderr = Get-Content $errFile -Raw
+        $exitCode = $process.ExitCode
+        
+        if ($exitCode -ne 0) {
+            $errorMsg = "Native command failed with exit code $exitCode`n"
+            if ($stderr) { $errorMsg += "STDERR: $stderr`n" }
+            if ($stdout) { $errorMsg += "STDOUT: $stdout" }
+            throw $errorMsg
+        }
+        
+        # Return object with all streams for caller to use
+        @{
+            ExitCode = $exitCode
+            Stdout = $stdout
+            Stderr = $stderr
+        }
+    } finally {
+        Remove-Item $outFile, $errFile -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Show-Usage {
     Write-Host "Usage:" -ForegroundColor Cyan
     Write-Host "  .\scripts\agent.ps1 <agent> [options]" -ForegroundColor White
@@ -113,19 +153,33 @@ try {
     
     Write-Host "[OK] Invoking $Agent..." -ForegroundColor Green
     
-    # Invoke agent with appropriate parameters
+    # Invoke agent script directly in this process (avoids nested PowerShell stderr issues)
+    # Build arguments as a hashtable for splatting
+    $agentParams = @{
+        ReportFile = $reportFile
+        RepoRoot = $repoRoot
+    }
+    
     switch ($Agent) {
         "bughunter" { 
-            $bugArgs = @("-Issue", $Issue, "-ReportFile", $reportFile, "-RepoRoot", $repoRoot)
-            if ($Mode) { $bugArgs += @("-Mode", $Mode) }
-            if ($Target) { $bugArgs += @("-Target", $Target) }
-            if ($Slug) { $bugArgs += @("-Slug", $Slug) }
-            if ($DryRun) { $bugArgs += "-DryRun" }
-            & powershell -ExecutionPolicy Bypass -File $agentScript @bugArgs
+            $agentParams["Issue"] = $Issue
+            if ($Mode) { $agentParams["Mode"] = $Mode }
+            if ($Target) { $agentParams["Target"] = $Target }
+            if ($Slug) { $agentParams["Slug"] = $Slug }
+            if ($DryRun) { $agentParams["DryRun"] = $DryRun }
+            & $agentScript @agentParams
         }
-        "refactorer" { & powershell -ExecutionPolicy Bypass -File $agentScript -File $File -ReportFile $reportFile -RepoRoot $repoRoot }
-        "testwriter" { & powershell -ExecutionPolicy Bypass -File $agentScript -File $File -ReportFile $reportFile -RepoRoot $repoRoot }
-        default { & powershell -ExecutionPolicy Bypass -File $agentScript -ReportFile $reportFile -RepoRoot $repoRoot }
+        "refactorer" { 
+            $agentParams["File"] = $File
+            & $agentScript @agentParams
+        }
+        "testwriter" { 
+            $agentParams["File"] = $File
+            & $agentScript @agentParams
+        }
+        default { 
+            & $agentScript @agentParams
+        }
     }
     
     if ($LASTEXITCODE -ne 0) {

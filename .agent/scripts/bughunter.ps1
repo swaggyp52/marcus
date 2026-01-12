@@ -44,6 +44,33 @@ function Write-Fail { param([string]$msg) Write-Host "[FAIL] $msg" -ForegroundCo
 function Write-Warn { param([string]$msg) Write-Host "[WARN] $msg" -ForegroundColor Yellow }
 function Write-Section { param([string]$msg) Write-Host "`n=== $msg ===" -ForegroundColor Cyan }
 
+# Safe git invoker - handles git's harmless stderr without crashing
+function Invoke-Git {
+    param(
+        [Parameter(Mandatory=$true)][string]$Repo,
+        [Parameter(Mandatory=$true)][string[]]$Arguments
+    )
+    
+    $allArgs = @("-C", $Repo) + $Arguments
+    $result = @{
+        Output = ""
+        Stderr = ""
+        Success = $false
+    }
+    
+    try {
+        # Capture both streams
+        $result.Output = & git $allArgs 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $result.Success = $true
+        }
+        return $result
+    } catch {
+        $result.Output = $_.Exception.Message
+        return $result
+    }
+}
+
 function New-SafeSlug {
     param([string]$text)
     $slug = $text -replace '[^a-zA-Z0-9\s-]', '' `
@@ -55,11 +82,13 @@ function New-SafeSlug {
 }
 
 # Get git info
-$gitHash = git -C $RepoRoot rev-parse --short HEAD 2>$null
-if (-not $gitHash) { $gitHash = "N/A" }
+$gitInfo = Invoke-Git -Repo $RepoRoot -Arguments @("rev-parse", "--short", "HEAD")
+$gitHash = if ($gitInfo.Success) { $gitInfo.Output.Trim() } else { "N/A" }
 
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-$originalBranch = git -C $RepoRoot branch --show-current 2>$null
+
+$branchInfo = Invoke-Git -Repo $RepoRoot -Arguments @("branch", "--show-current")
+$originalBranch = if ($branchInfo.Success) { $branchInfo.Output.Trim() } else { "N/A" }
 
 # Build report header
 $invocation = "bughunter -Issue `"$Issue`" -Mode $Mode"
@@ -103,7 +132,8 @@ if ($Mode -eq "patch") {
     }
     
     # Check git status
-    $gitStatus = git -C $RepoRoot status --porcelain 2>&1 | Out-String
+    $statusResult = Invoke-Git -Repo $RepoRoot -Arguments @("status", "--porcelain")
+    $gitStatus = if ($statusResult.Success) { $statusResult.Output } else { "" }
     if ($gitStatus.Trim()) {
         Write-Warn "Working directory not clean"
         $report += "`n- [WARN] Working directory not clean:"
@@ -277,7 +307,8 @@ if ($Mode -eq "patch") {
     $originalBranchName = $branchName
     
     # Check if branch exists, add suffix if needed
-    $existingBranches = git -C $RepoRoot branch --list 2>&1
+    $branchListResult = Invoke-Git -Repo $RepoRoot -Arguments @("branch", "--list")
+    $existingBranches = if ($branchListResult.Success) { $branchListResult.Output } else { "" }
     while ($existingBranches -match [regex]::Escape($branchName)) {
         $branchName = "$originalBranchName-$branchSuffix"
         $branchSuffix++
@@ -294,8 +325,11 @@ if ($Mode -eq "patch") {
     
     if (-not $DryRun) {
         Write-Section "Creating Branch"
-        git -C $RepoRoot checkout -b $branchName 2>$null | Out-Null
-        if (git -C $RepoRoot rev-parse --abbrev-ref HEAD 2>$null | Select-String $branchName) {
+        $checkoutResult = Invoke-Git -Repo $RepoRoot -Arguments @("checkout", "-b", $branchName)
+        $currentBranchResult = Invoke-Git -Repo $RepoRoot -Arguments @("rev-parse", "--abbrev-ref", "HEAD")
+        $currentBranch = if ($currentBranchResult.Success) { $currentBranchResult.Output.Trim() } else { "" }
+        
+        if ($checkoutResult.Success -and $currentBranch -eq $branchName) {
             Write-Ok "Created branch: $branchName"
             $report += "`n`n## Branch Creation`n"
             $report += "`n- [OK] Created and switched to branch: $branchName"
@@ -360,7 +394,8 @@ if ($Mode -eq "patch") {
                 $report += "`n- **Type:** Defensive comment/documentation"
                 
                 # Show diff
-                $diffOutput = git -C $RepoRoot diff $fullTargetPath 2>&1 | Out-String
+                $diffResult = Invoke-Git -Repo $RepoRoot -Arguments @("diff", $fullTargetPath)
+                $diffOutput = if ($diffResult.Success) { $diffResult.Output } else { "" }
                 if ($diffOutput) {
                     $report += "`n`n### Diff Preview"
                     $report += "`n``````diff"
@@ -410,10 +445,11 @@ if ($Mode -eq "patch") {
                 Write-Section "Committing Changes"
                 $report += "`n`n## Commit`n"
                 
-                $null = git -C $RepoRoot add $fullTargetPath 2>$null
+                $addResult = Invoke-Git -Repo $RepoRoot -Arguments @("add", $fullTargetPath)
                 $commitMsg = "BugHunter patch: $($Issue.Substring(0, [Math]::Min(50, $Issue.Length)))"
-                $null = git -C $RepoRoot commit -m $commitMsg 2>$null
-                $commitHash = git -C $RepoRoot rev-parse --short HEAD 2>$null
+                $commitResult = Invoke-Git -Repo $RepoRoot -Arguments @("commit", "-m", $commitMsg)
+                $hashResult = Invoke-Git -Repo $RepoRoot -Arguments @("rev-parse", "--short", "HEAD")
+                $commitHash = if ($hashResult.Success) { $hashResult.Output.Trim() } else { "unknown" }
                 
                 Write-Ok "Changes committed: $commitHash"
                 $report += "`n- [OK] Changes committed"
@@ -435,10 +471,10 @@ if ($Mode -eq "patch") {
                 $report += "`n`n## Rollback`n"
                 $report += "`n- Quality gate failed - rolling back changes..."
                 
-                $null = git -C $RepoRoot restore --staged . 2>$null
-                $null = git -C $RepoRoot restore . 2>$null
-                $null = git -C $RepoRoot checkout $originalBranch 2>$null
-                $null = git -C $RepoRoot branch -D $branchName 2>$null
+                $null = Invoke-Git -Repo $RepoRoot -Arguments @("restore", "--staged", ".")
+                $null = Invoke-Git -Repo $RepoRoot -Arguments @("restore", ".")
+                $null = Invoke-Git -Repo $RepoRoot -Arguments @("checkout", $originalBranch)
+                $null = Invoke-Git -Repo $RepoRoot -Arguments @("branch", "-D", $branchName)
                 
                 Write-Warn "Rolled back to original state"
                 $report += "`n- [OK] Restored working tree"
