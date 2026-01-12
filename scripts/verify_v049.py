@@ -289,9 +289,9 @@ def check_v048_features_intact():
 def check_v048_routes_intact():
     """Check v0.48 API routes still work."""
     try:
-        from marcus_app.backend.suggest_routes import suggest_bp
-        from marcus_app.backend.next_routes import next_bp
-        from marcus_app.backend.undo_routes import undo_bp
+        from marcus_app.backend.suggest_routes import router as suggest_router
+        from marcus_app.backend.next_routes import router as next_router
+        from marcus_app.backend.undo_routes import router as undo_router
         return True
     except ImportError:
         return False
