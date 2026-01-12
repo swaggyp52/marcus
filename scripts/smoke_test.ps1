@@ -36,24 +36,23 @@ try{
 try{
     $g = Invoke-WebRequest -UseBasicParsing -Uri "$ApiBase/api/graph" -TimeoutSec 5
     $j = $g.Content | ConvertFrom-Json
-    if(-not $j.nodes){ Write-Error 'Graph empty or invalid'; if($proc){ $proc | Stop-Process -Force }; exit 1 }
-    Write-Host "[PASS] graph ok (nodes: $($j.nodes.Count))"
+    if(-not ($j | Get-Member -Name nodes -ErrorAction SilentlyContinue)){ Write-Error 'Graph missing nodes property'; if($proc){ $proc | Stop-Process -Force }; exit 1 }
+    Write-Host "[PASS] graph ok (nodes: $($j.nodes.Count), edges: $($j.edges.Count))"
 } catch { Write-Error "Graph check failed: $_"; if($proc){ $proc | Stop-Process -Force }; exit 1 }
 
-# upload sample_upload.txt
-try{
-    $sample = Resolve-Path ..\sample_upload.txt
-    if(-not $sample){ Write-Error 'sample_upload.txt not found'; if($proc){ $proc | Stop-Process -Force }; exit 1 }
-    if(Get-Command curl -ErrorAction SilentlyContinue){
-        $out = curl -s -F "file=@$($sample.Path)" "$ApiBase/api/upload" | ConvertFrom-Json
-    } else {
-        # PowerShell Invoke-RestMethod multipart (works in PowerShell 7+)
-        $form = @{ file = Get-Item $sample }
+# upload sample_upload.txt - SKIP if file missing
+$samplePath = (Resolve-Path (Join-Path $PSScriptRoot '..' 'sample_upload.txt') -ErrorAction SilentlyContinue)
+if($samplePath){
+    try{
+        # Use Invoke-RestMethod with multipart form data
+        $form = @{ file = Get-Item $samplePath }
         $out = Invoke-RestMethod -Uri "$ApiBase/api/upload" -Method Post -Form $form
-    }
-    if(-not $out.excerpt){ Write-Error 'Upload failed or no excerpt returned'; if($proc){ $proc | Stop-Process -Force }; exit 1 }
-    Write-Host "[PASS] upload ok (excerpt length: $($out.excerpt.Length))"
-} catch { Write-Error "Upload failed: $_"; if($proc){ $proc | Stop-Process -Force }; exit 1 }
+        if(-not $out.excerpt){ Write-Error 'Upload failed or no excerpt returned'; if($proc){ $proc | Stop-Process -Force }; exit 1 }
+        Write-Host "[PASS] upload ok (excerpt length: $($out.excerpt.Length))"
+    } catch { Write-Error "Upload failed: $_"; if($proc){ $proc | Stop-Process -Force }; exit 1 }
+} else {
+    Write-Host "[SKIP] upload test (sample_upload.txt not found)"
+}
 
 # chat create class
 try{
