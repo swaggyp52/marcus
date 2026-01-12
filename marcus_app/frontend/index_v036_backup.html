@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcus - Academic Operating Environment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-darker: #0a0f1f;
+            --bg-card: #1e293b;
+            --border: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Layout: Sidebar + Main */
+        .app-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            background: var(--bg-darker);
+            border-right: 1px solid var(--border);
+            padding: 20px 0;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 20px;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .sidebar-brand-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 8px;
+            font-size: 20px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav-item {
+            padding: 0;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-nav-link:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .sidebar-nav-link.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .sidebar-nav-link-icon {
+            font-size: 18px;
+            min-width: 24px;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            padding: 0 20px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            grid-column: 2;
+            padding: 0;
+        }
+
+        /* Top Bar */
+        .topbar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .topbar-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .topbar-breadcrumb {
+            display: flex;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 6px;
+            color: #10b981;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-badge.offline {
+            background: rgba(107, 114, 128, 0.15);
+            border-color: rgba(107, 114, 128, 0.3);
+            color: #9ca3af;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        .status-badge.offline .status-dot {
+            background: #9ca3af;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* Tabs */
+        .tabs {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .tab {
+            padding: 16px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-badge {
+            background: var(--danger);
+            color: white;
+            border-radius: 12px;
+            padding: 2px 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        /* Content Area */
+        .content {
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
+        }
+
+        .card-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header-icon {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .grid-4 { grid-template-columns: 1fr 1fr; }
+            .grid-3 { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .app-layout {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-bottom: 1px solid var(--border);
+            }
+            .main-content {
+                grid-column: 1;
+            }
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
+        }
+
+        .stat-card-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-card-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* List Items */
+        .list-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background: rgba(99, 102, 241, 0.05);
+            border-color: var(--primary);
+        }
+
+        .list-item-content {
+            flex: 1;
+        }
+
+        .list-item-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .list-item-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .list-item-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-primary {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-darker);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-dialog {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: var(--warning);
+        }
+
+        .alert-info {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
+            color: var(--primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 30px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(99, 102, 241, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Utility */
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+        .gap-20 { gap: 20px; }
+        .flex { display: flex; }
+        .flex-center { display: flex; align-items: center; justify-content: center; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <a href="#" class="sidebar-brand">
+                <div class="sidebar-brand-icon">📚</div>
+                <span>Marcus</span>
+            </a>
+
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link active" onclick="switchTab('home'); return false;">
+                        <span class="sidebar-nav-link-icon">🏠</span>
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" onclick="switchTab('inbox'); return false;">
+                        <span class="sidebar-nav-link-icon">📥</span>
+                        <span>Inbox</span>
+                        <span class="tab-badge" id="inboxBadge" style="display: none;">0</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" onclick="switchTab('classes'); return false;">
+                        <span class="sidebar-nav-link-icon">📖</span>
+                        <span>Classes</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" onclick="switchTab('assignments'); return false;">
+                        <span class="sidebar-nav-link-icon">✓</span>
+                        <span>Assignments</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" onclick="switchTab('quick-add'); return false;">
+                        <span class="sidebar-nav-link-icon">➕</span>
+                        <span>Quick Add</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" onclick="switchTab('search'); return false;">
+                        <span class="sidebar-nav-link-icon">🔍</span>
+                        <span>Search</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" onclick="switchTab('missions'); return false;">
+                        <span class="sidebar-nav-link-icon">🎯</span>
+                        <span>Missions</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link" onclick="switchTab('audit'); return false;">
+                        <span class="sidebar-nav-link-icon">📋</span>
+                        <span>Audit</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <button class="btn btn-secondary" style="width: 100%;" onclick="lockSession()">
+                    🔒 Lock
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- TOP BAR -->
+            <div class="topbar">
+                <div class="topbar-left">
+                    <div class="topbar-title" id="pageTitle">Home</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="status-badge" id="statusBadge">
+                        <span class="status-dot"></span>
+                        <span>System Online</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="content">
+                <!-- HOME TAB -->
+                <div id="homeTab" class="tab-content active">
+                    <!-- Welcome Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span>👋 Welcome back</span>
+                            <button class="btn btn-sm" onclick="openQuickAddModal()">+ Add Item</button>
+                        </div>
+                        <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                            You have everything you need to ace this semester. Start by uploading your syllabi or jump into your assignments.
+                        </p>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn" onclick="openSyllabiUpload()">
+                                📤 Upload Syllabi
+                            </button>
+                            <button class="btn btn-secondary" onclick="switchTab('assignments')">
+                                View Assignments
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Stats -->
+                    <div class="grid-4">
+                        <div class="stat-card">
+                            <div class="stat-card-icon">📚</div>
+                            <div class="stat-card-value" id="statClasses">0</div>
+                            <div class="stat-card-label">Classes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-icon">✓</div>
+                            <div class="stat-card-value" id="statAssignments">0</div>
+                            <div class="stat-card-label">Assignments</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-icon">⏰</div>
+                            <div class="stat-card-value" id="statDueThisWeek">0</div>
+                            <div class="stat-card-label">Due This Week</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-icon">📥</div>
+                            <div class="stat-card-value" id="statInboxCount">0</div>
+                            <div class="stat-card-label">Inbox Items</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Items -->
+                    <div class="card mt-20">
+                        <div class="card-header">📌 Recent Assignments</div>
+                        <div id="recentAssignmentsContainer">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">✓</div>
+                                <div class="empty-state-title">No assignments yet</div>
+                                <div class="empty-state-text">Upload syllabi to get started</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Agent Section -->
+                    <div class="card mt-20">
+                        <div class="card-header">🤖 Marcus Assistant</div>
+                        <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">
+                            Ask me anything about your classes, assignments, or deadlines.
+                        </p>
+                        <div id="agentChatContainer"></div>
+                    </div>
+                </div>
+
+                <!-- INBOX TAB -->
+                <div id="inboxTab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <span>📥 Inbox</span>
+                            <button class="btn btn-sm" onclick="refreshInbox()">↻ Refresh</button>
+                        </div>
+                        <div id="inboxContainer">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div class="empty-state-title">Inbox empty</div>
+                                <div class="empty-state-text">Your inbox items will appear here</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CLASSES TAB -->
+                <div id="classesTab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <span>📖 My Classes</span>
+                            <button class="btn btn-sm" onclick="openAddClassModal()">+ Add Class</button>
+                        </div>
+                        <div id="classesContainer">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📚</div>
+                                <div class="empty-state-title">No classes yet</div>
+                                <div class="empty-state-text">Create or import your classes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ASSIGNMENTS TAB -->
+                <div id="assignmentsTab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header flex-between">
+                            <span>✓ Assignments</span>
+                            <button class="btn btn-sm" onclick="openAddAssignmentModal()">+ Add Assignment</button>
+                        </div>
+                        <div id="assignmentsContainer">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">✓</div>
+                                <div class="empty-state-title">No assignments yet</div>
+                                <div class="empty-state-text">Create or import assignments from your syllabus</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QUICK ADD TAB -->
+                <div id="quickAddTab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">➕ Quick Add</div>
+                        <div class="form-group">
+                            <label>Item Title</label>
+                            <input type="text" id="quickAddTitle" placeholder="e.g., Finish problem set">
+                        </div>
+                        <div class="form-group">
+                            <label>Description (optional)</label>
+                            <textarea id="quickAddDesc" placeholder="Add more details..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="quickAddType">
+                                <option value="task">Task</option>
+                                <option value="assignment">Assignment</option>
+                                <option value="deadline">Deadline</option>
+                                <option value="note">Note</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Due Date (optional)</label>
+                            <input type="date" id="quickAddDue">
+                        </div>
+                        <button class="btn" onclick="submitQuickAdd()" style="width: 100%;">
+                            ✓ Add Item
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SEARCH TAB -->
+                <div id="searchTab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">🔍 Search</div>
+                        <div class="form-group">
+                            <input type="text" id="searchInput" placeholder="Search classes, assignments, deadlines..." style="font-size: 16px; padding: 12px;">
+                        </div>
+                        <div id="searchResults">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🔍</div>
+                                <div class="empty-state-title">Start typing to search</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MISSIONS TAB -->
+                <div id="missionsTab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">🎯 Mission Control</div>
+                        <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                            View long-term goals and track semester progress.
+                        </p>
+                        <div id="missionsContainer">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🎯</div>
+                                <div class="empty-state-title">No missions yet</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AUDIT TAB -->
+                <div id="auditTab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">📋 Audit Log</div>
+                        <div id="auditContainer">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📋</div>
+                                <div class="empty-state-title">No audit logs</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="syllabiModal" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">📤 Upload Syllabi</h3>
+                <button class="modal-close" onclick="closeSyllabiModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Upload PDF syllabi to auto-extract classes and assignments.
+                </p>
+                <div class="form-group">
+                    <label>Select files</label>
+                    <input type="file" id="syllabiFile" accept=".pdf" multiple>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSyllabiModal()">Cancel</button>
+                <button class="btn" onclick="submitSyllabiUpload()">Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addClassModal" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">📖 Add Class</h3>
+                <button class="modal-close" onclick="closeAddClassModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Class Name</label>
+                    <input type="text" id="className" placeholder="e.g., Calculus II">
+                </div>
+                <div class="form-group">
+                    <label>Instructor</label>
+                    <input type="text" id="classInstructor" placeholder="Professor name">
+                </div>
+                <div class="form-group">
+                    <label>Term</label>
+                    <select id="classTerm">
+                        <option value="">Select term</option>
+                        <option value="Spring 2024">Spring 2024</option>
+                        <option value="Summer 2024">Summer 2024</option>
+                        <option value="Fall 2024">Fall 2024</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddClassModal()">Cancel</button>
+                <button class="btn" onclick="submitAddClass()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            
+            // Show selected tab
+            const tabEl = document.getElementById(tabName + 'Tab');
+            if (tabEl) tabEl.classList.add('active');
+
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-nav-link').forEach(el => el.classList.remove('active'));
+            event.target.closest('.sidebar-nav-link')?.classList.add('active');
+
+            // Update page title
+            const titles = {
+                'home': 'Home',
+                'inbox': 'Inbox',
+                'classes': 'My Classes',
+                'assignments': 'Assignments',
+                'quickAdd': 'Quick Add',
+                'search': 'Search',
+                'missions': 'Missions',
+                'audit': 'Audit Log'
+            };
+            document.getElementById('pageTitle').textContent = titles[tabName] || 'Marcus';
+        }
+
+        // Modal handlers
+        function openSyllabiUpload() {
+            document.getElementById('syllabiModal').classList.add('active');
+        }
+
+        function closeSyllabiModal() {
+            document.getElementById('syllabiModal').classList.remove('active');
+        }
+
+        function openAddClassModal() {
+            document.getElementById('addClassModal').classList.add('active');
+        }
+
+        function closeAddClassModal() {
+            document.getElementById('addClassModal').classList.remove('active');
+        }
+
+        function submitSyllabiUpload() {
+            alert('Syllabi upload functionality coming soon!');
+            closeSyllabiModal();
+        }
+
+        function submitAddClass() {
+            alert('Add class functionality coming soon!');
+            closeAddClassModal();
+        }
+
+        function lockSession() {
+            alert('Lock functionality coming soon!');
+        }
+
+        function submitQuickAdd() {
+            alert('Quick add functionality coming soon!');
+        }
+
+        function openQuickAddModal() {
+            switchTab('quickAdd');
+        }
+
+        function openAddAssignmentModal() {
+            alert('Add assignment functionality coming soon!');
+        }
+
+        function refreshInbox() {
+            alert('Refresh inbox functionality coming soon!');
+        }
+
+        // Close modals on backdrop click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Placeholder stubs - these are overridden by app.js
+        function openSyllabiUpload() {}
+        function closeSyllabiModal() {}
+        function openAddClassModal() {}
+        function closeAddClassModal() {}
+    </script>
+    <script src="/static/app.js"></script>
+</body>
+</html>

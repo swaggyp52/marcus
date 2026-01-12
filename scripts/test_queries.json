@@ -1,0 +1,23 @@
+{
+  "PHYS214": [
+    "rotational dynamics",
+    "moment of inertia",
+    "torque calculation",
+    "angular momentum conservation",
+    "rotational kinetic energy"
+  ],
+  "CYENG350": [
+    "threat model",
+    "secure boot",
+    "side channel attack",
+    "timing attack mitigation",
+    "STRIDE framework"
+  ],
+  "ECE347": [
+    "cache coherence",
+    "finite state machine",
+    "setup time hold time",
+    "MESI protocol",
+    "metastability"
+  ]
+}

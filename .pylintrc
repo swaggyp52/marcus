@@ -1,0 +1,16 @@
+[MASTER]
+# Pylint configuration for Marcus project
+# Suppress environment-specific import warnings
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    import-error,
+    no-name-in-module,
+    import-outside-toplevel,
+    protected-access
+
+[FORMAT]
+max-line-length=120

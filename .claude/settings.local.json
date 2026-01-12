@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c:*)",
+      "Bash(venv\\\\Scripts\\\\python.exe:*)",
+      "Bash(venv/Scripts/python.exe:*)",
+      "Bash(timeout 3 venv/Scripts/python.exe:*)",
+      "Bash(curl:*)",
+      "Bash(if [ -d \"/m\" ])",
+      "Bash(then echo \"M: drive detected\")",
+      "Bash(elif [ -d \"/mnt/m\" ])",
+      "Bash(then echo \"/mnt/m detected\")",
+      "Bash(else echo \"Checking for mounted VeraCrypt volume...\")",
+      "Bash(fi)",
+      "Bash(wmic:*)",
+      "Bash(venv/Scripts/pip.exe install:*)",
+      "Bash(timeout 5 venv/Scripts/python.exe:*)",
+      "Bash(timeout 8 venv/Scripts/python.exe:*)",
+      "Bash(python verify_frontend_v041.py:*)",
+      "Bash(python verify_v041_complete.py:*)",
+      "Bash(python verify_v042_security.py:*)",
+      "Bash(python:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}

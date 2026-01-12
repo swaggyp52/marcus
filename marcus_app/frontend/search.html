@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcus - Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            color: #888;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: #252540;
+            color: #e0e0e0;
+        }
+
+        /* Search Form */
+        .search-form {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            background: #252540;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1em;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+        }
+
+        .filter-select {
+            padding: 8px 15px;
+            background: #252540;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        /* Results */
+        .results-header {
+            margin-bottom: 20px;
+            color: #888;
+            font-size: 0.95em;
+        }
+
+        .result-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+
+        .result-card:hover {
+            border-color: #667eea;
+            background: #1f1f2e;
+        }
+
+        .result-snippet {
+            font-size: 1.05em;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .result-snippet mark {
+            background: #667eea44;
+            color: #667eea;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .result-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .result-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .score-badge {
+            background: #667eea44;
+            color: #667eea;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .method-badge {
+            background: #444;
+            color: #aaa;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 0.8em;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #444;
+            color: #e0e0e0;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Context Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .modal-title {
+            font-size: 1.3em;
+            color: #667eea;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .close-btn:hover {
+            color: #e0e0e0;
+        }
+
+        .context-metadata {
+            background: #252540;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .context-metadata-item {
+            margin-bottom: 5px;
+        }
+
+        .chunk-context {
+            margin-bottom: 20px;
+        }
+
+        .chunk {
+            background: #252540;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid #444;
+        }
+
+        .chunk.current {
+            background: #2f2f5a;
+            border-left-color: #667eea;
+        }
+
+        .chunk-label {
+            color: #888;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        .chunk-text {
+            line-height: 1.7;
+        }
+
+        .citation-box {
+            background: #1a1a1a;
+            border: 1px dashed #667eea;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.85em;
+            color: #667eea;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copy-icon {
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .copy-icon:hover {
+            color: #764ba2;
+        }
+
+        /* States */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .spinner {
+            border: 3px solid #333;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .no-results-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Search</h1>
+            <a href="/" class="nav-link">← Back to Dashboard</a>
+        </header>
+
+        <!-- Search Form -->
+        <div class="search-form">
+            <div class="search-input-group">
+                <input
+                    type="text"
+                    class="search-input"
+                    id="searchQuery"
+                    placeholder="Search your materials (e.g., 'rotational dynamics', 'neural networks', 'cache coherence')"
+                    autocomplete="off"
+                >
+                <button class="search-btn" id="searchBtn" onclick="performSearch()">
+                    Search
+                </button>
+            </div>
+
+            <div class="filters">
+                <select class="filter-select" id="classFilter">
+                    <option value="">All Classes</option>
+                </select>
+                <select class="filter-select" id="assignmentFilter">
+                    <option value="">All Assignments</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsContainer"></div>
+    </div>
+
+    <!-- Context Modal -->
+    <div class="modal" id="contextModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Chunk Context</h2>
+                <button class="close-btn" onclick="closeContextModal()">×</button>
+            </div>
+            <div id="contextContent"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // API Base URL
+        const API_BASE = '/api';
+
+        // State
+        let currentClasses = [];
+        let currentAssignments = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadClasses();
+
+            // Enter key to search
+            document.getElementById('searchQuery').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            // Class filter change
+            document.getElementById('classFilter').addEventListener('change', (e) => {
+                loadAssignments(e.target.value);
+            });
+        });
+
+        // Load classes
+        async function loadClasses() {
+            try {
+                const response = await fetch(`${API_BASE}/classes`);
+                const classes = await response.json();
+                currentClasses = classes;
+
+                const select = document.getElementById('classFilter');
+                select.innerHTML = '<option value="">All Classes</option>';
+
+                classes.forEach(cls => {
+                    const option = document.createElement('option');
+                    option.value = cls.id;
+                    option.textContent = `${cls.code} - ${cls.name}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading classes:', error);
+            }
+        }
+
+        // Load assignments by class
+        async function loadAssignments(classId) {
+            const select = document.getElementById('assignmentFilter');
+            select.innerHTML = '<option value="">All Assignments</option>';
+
+            if (!classId) {
+                currentAssignments = [];
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/assignments?class_id=${classId}`);
+                const assignments = await response.json();
+                currentAssignments = assignments;
+
+                assignments.forEach(assignment => {
+                    const option = document.createElement('option');
+                    option.value = assignment.id;
+                    option.textContent = assignment.title;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading assignments:', error);
+            }
+        }
+
+        // Perform search
+        async function performSearch() {
+            const query = document.getElementById('searchQuery').value.trim();
+            if (!query) {
+                showToast('Please enter a search query', 'error');
+                return;
+            }
+
+            const classId = document.getElementById('classFilter').value;
+            const assignmentId = document.getElementById('assignmentFilter').value;
+
+            const container = document.getElementById('resultsContainer');
+
+            // Show loading
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Searching...</div>
+                </div>
+            `;
+
+            // Disable search button
+            const searchBtn = document.getElementById('searchBtn');
+            searchBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        class_id: classId ? parseInt(classId) : null,
+                        assignment_id: assignmentId ? parseInt(assignmentId) : null,
+                        limit: 10
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Search failed');
+                }
+
+                const results = await response.json();
+                displayResults(results, query);
+
+            } catch (error) {
+                console.error('Search error:', error);
+                container.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">⚠️</div>
+                        <div>Search failed. Please try again.</div>
+                    </div>
+                `;
+            } finally {
+                searchBtn.disabled = false;
+            }
+        }
+
+        // Display results
+        function displayResults(results, query) {
+            const container = document.getElementById('resultsContainer');
+
+            if (results.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <div>No results found for "${query}"</div>
+                        <div style="margin-top: 10px; color: #666;">Try different keywords or check your filters</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const resultsHTML = `
+                <div class="results-header">
+                    Found ${results.length} result${results.length !== 1 ? 's' : ''} for "${query}"
+                </div>
+                ${results.map(result => renderResult(result, query)).join('')}
+            `;
+
+            container.innerHTML = resultsHTML;
+        }
+
+        // Render single result
+        function renderResult(result, query) {
+            const score = Math.round(result.score * 100);
+            const snippet = highlightQuery(result.snippet, query);
+
+            return `
+                <div class="result-card">
+                    <div class="result-snippet">${snippet}</div>
+
+                    <div class="result-meta">
+                        <div class="result-meta-item">
+                            📄 ${result.artifact_filename || 'Unknown file'}
+                        </div>
+                        ${result.page_number ? `
+                            <div class="result-meta-item">
+                                📖 Page ${result.page_number}
+                            </div>
+                        ` : ''}
+                        ${result.section_title ? `
+                            <div class="result-meta-item">
+                                📑 ${result.section_title}
+                            </div>
+                        ` : ''}
+                        <span class="score-badge">${score}% match</span>
+                        <span class="method-badge">${result.search_method}</span>
+                    </div>
+
+                    <div class="result-actions">
+                        <button class="btn btn-primary" onclick="viewChunkContext(${result.chunk_id})">
+                            View Source
+                        </button>
+                        <button class="btn btn-secondary" onclick="copyCitation(${result.chunk_id}, '${escapeHtml(result.artifact_filename)}', ${result.page_number})">
+                            Copy Citation
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Highlight query terms in snippet
+        function highlightQuery(snippet, query) {
+            const terms = query.toLowerCase().split(' ');
+            let highlighted = snippet;
+
+            terms.forEach(term => {
+                if (term.length < 3) return; // Skip short words
+                const regex = new RegExp(`(${escapeRegex(term)})`, 'gi');
+                highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+            });
+
+            return highlighted;
+        }
+
+        // View chunk context
+        async function viewChunkContext(chunkId) {
+            const modal = document.getElementById('contextModal');
+            const content = document.getElementById('contextContent');
+
+            modal.classList.add('active');
+            content.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Loading context...</div>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`${API_BASE}/chunks/${chunkId}?context_chunks=2`);
+                const data = await response.json();
+
+                renderChunkContext(data);
+
+            } catch (error) {
+                console.error('Error loading context:', error);
+                content.innerHTML = `
+                    <div class="no-results">
+                        <div>Failed to load context</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Render chunk context
+        function renderChunkContext(data) {
+            const content = document.getElementById('contextContent');
+            const { chunk, previous_chunks, next_chunks, artifact, metadata } = data;
+
+            const citation = `MarcusCitation: artifact=${artifact?.filename || 'unknown'}; page=${chunk.page_number || 'unknown'}; chunk=${chunk.id}; section=${chunk.section_title || 'unknown'}`;
+
+            const html = `
+                <div class="context-metadata">
+                    <div class="context-metadata-item"><strong>File:</strong> ${artifact?.filename || 'Unknown'}</div>
+                    <div class="context-metadata-item"><strong>Page:</strong> ${chunk.page_number || 'Unknown'}</div>
+                    <div class="context-metadata-item"><strong>Section:</strong> ${chunk.section_title || 'Unknown'}</div>
+                    <div class="context-metadata-item"><strong>Position:</strong> Chunk ${metadata.current_position} of ${metadata.total_chunks}</div>
+                </div>
+
+                <div class="chunk-context">
+                    ${previous_chunks.map(c => `
+                        <div class="chunk">
+                            <div class="chunk-label">Previous context</div>
+                            <div class="chunk-text">${escapeHtml(c.content)}</div>
+                        </div>
+                    `).join('')}
+
+                    <div class="chunk current">
+                        <div class="chunk-label">Current chunk</div>
+                        <div class="chunk-text">${escapeHtml(chunk.content)}</div>
+                    </div>
+
+                    ${next_chunks.map(c => `
+                        <div class="chunk">
+                            <div class="chunk-label">Next context</div>
+                            <div class="chunk-text">${escapeHtml(c.content)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="citation-box">
+                    <code id="citationText">${citation}</code>
+                    <span class="copy-icon" onclick="copyCitationText('citationText')" title="Copy citation">
+                        📋
+                    </span>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="copyChunkText(\`${escapeHtml(chunk.content).replace(/`/g, '\\`')}\`)">
+                        Copy Chunk Text
+                    </button>
+                </div>
+            `;
+
+            content.innerHTML = html;
+        }
+
+        // Close context modal
+        function closeContextModal() {
+            document.getElementById('contextModal').classList.remove('active');
+        }
+
+        // Copy citation
+        function copyCitation(chunkId, filename, pageNumber) {
+            const citation = `MarcusCitation: artifact=${filename}; page=${pageNumber || 'unknown'}; chunk=${chunkId}`;
+            copyToClipboard(citation);
+            showToast('Citation copied to clipboard');
+        }
+
+        // Copy citation text from element
+        function copyCitationText(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            copyToClipboard(text);
+            showToast('Citation copied to clipboard');
+        }
+
+        // Copy chunk text
+        function copyChunkText(text) {
+            copyToClipboard(text);
+            showToast('Chunk text copied to clipboard');
+        }
+
+        // Copy to clipboard helper
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).catch(err => {
+                console.error('Failed to copy:', err);
+                showToast('Failed to copy to clipboard', 'error');
+            });
+        }
+
+        // Show toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.background = type === 'success' ? '#10b981' : '#ef4444';
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Escape regex
+        function escapeRegex(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Close modal on outside click
+        document.getElementById('contextModal').addEventListener('click', (e) => {
+            if (e.target.id === 'contextModal') {
+                closeContextModal();
+            }
+        });
+    </script>
+</body>
+</html>

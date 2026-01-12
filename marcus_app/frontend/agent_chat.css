@@ -1,0 +1,412 @@
+/**
+ * Agent Chat Styles - v0.47b
+ *
+ * Central command interface styling.
+ */
+
+/* ============================================================================
+   AGENT CHAT CONTAINER
+   ============================================================================ */
+
+.agent-chat {
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.agent-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.agent-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.agent-messages::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+.agent-messages::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+.agent-messages::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
+
+/* ============================================================================
+   MESSAGES
+   ============================================================================ */
+
+.agent-message {
+    display: flex;
+    gap: 12px;
+    animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: #1a1a1a;
+}
+
+.agent-message-user .message-icon {
+    background: #667eea;
+}
+
+.agent-message-agent .message-icon {
+    background: #10b981;
+}
+
+.agent-message-system .message-icon {
+    background: #3b82f6;
+}
+
+.agent-message-error .message-icon {
+    background: #ef4444;
+}
+
+.message-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.message-text {
+    color: #e0e0e0;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.agent-message-user .message-text {
+    background: #667eea;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border-bottom-left-radius: 4px;
+    display: inline-block;
+    max-width: 80%;
+}
+
+.agent-message-agent .message-text {
+    background: #1a1a1a;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border-bottom-right-radius: 4px;
+}
+
+.agent-message-system .message-text {
+    background: #1a2332;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border-left: 3px solid #3b82f6;
+}
+
+.agent-message-error .message-text {
+    background: #2a1414;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border-left: 3px solid #ef4444;
+}
+
+.message-timestamp {
+    font-size: 11px;
+    color: #666;
+}
+
+.message-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+/* ============================================================================
+   PROCESSING INDICATOR
+   ============================================================================ */
+
+.processing-dots span {
+    animation: blink 1.4s infinite;
+}
+
+.processing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.processing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes blink {
+    0%, 60%, 100% {
+        opacity: 1;
+    }
+    30% {
+        opacity: 0;
+    }
+}
+
+/* ============================================================================
+   ACTION CARDS
+   ============================================================================ */
+
+.action-card {
+    margin-top: 8px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.action-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #1a1a1a;
+    border-bottom: 1px solid #333;
+    font-size: 14px;
+}
+
+.action-card-icon {
+    font-size: 18px;
+}
+
+.action-card-body {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.action-card-detail {
+    font-size: 13px;
+    color: #aaa;
+}
+
+.action-card-item {
+    padding: 8px;
+    background: #1a1a1a;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #e0e0e0;
+}
+
+.action-card-actions {
+    padding: 12px;
+    border-top: 1px solid #333;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.stat-mini {
+    text-align: center;
+    padding: 12px;
+    background: #1a1a1a;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #888;
+}
+
+.stat-mini strong {
+    display: block;
+    font-size: 20px;
+    color: #667eea;
+    margin-bottom: 4px;
+}
+
+/* ============================================================================
+   INPUT AREA
+   ============================================================================ */
+
+.agent-input-container {
+    display: flex;
+    gap: 10px;
+    padding: 16px;
+    background: #0a0a0a;
+    border-top: 1px solid #333;
+}
+
+.agent-input {
+    flex: 1;
+    padding: 12px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    min-height: 44px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.agent-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.agent-input::placeholder {
+    color: #666;
+}
+
+.agent-send-btn {
+    flex-shrink: 0;
+    padding: 12px 24px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.agent-send-btn:hover {
+    background: #5568d3;
+    transform: translateY(-1px);
+}
+
+.agent-send-btn:active {
+    transform: translateY(0);
+}
+
+.agent-send-btn:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ============================================================================
+   SUGGESTIONS
+   ============================================================================ */
+
+.agent-suggestions {
+    padding: 12px 16px;
+    background: #0a0a0a;
+    border-top: 1px solid #333;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.suggestion-chip {
+    padding: 6px 12px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    font-size: 12px;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.suggestion-chip:hover {
+    background: #333;
+    color: #e0e0e0;
+    border-color: #667eea;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+/* ============================================================================
+   AUTOCOMPLETE DROPDOWN - v0.48
+   ============================================================================ */
+
+.agent-autocomplete-dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+.autocomplete-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #2a2a2a;
+    transition: background 0.15s;
+    font-size: 14px;
+}
+
+.autocomplete-item:hover {
+    background: #2a2a2a;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.agent-input-container {
+    position: relative;
+}
+
+@media (max-width: 768px) {
+    .agent-chat {
+        height: 500px;
+    }
+
+    .agent-message-user .message-text {
+        max-width: 90%;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .agent-input-container {
+        padding: 12px;
+    }
+
+    .agent-suggestions {
+        padding: 8px 12px;
+    }
+}
