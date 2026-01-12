@@ -295,7 +295,10 @@ if ($Mode -eq "patch") {
     if (-not $DryRun) {
         Write-Section "Creating Branch"
         try {
-            git -C $RepoRoot checkout -b $branchName 2>&1 | Out-Null
+            $gitOutput = git -C $RepoRoot checkout -b $branchName 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                throw "Git checkout failed with exit code $LASTEXITCODE"
+            }
             Write-Ok "Created branch: $branchName"
             $report += "`n`n## Branch Creation`n"
             $report += "`n- [OK] Created and switched to branch: $branchName"
