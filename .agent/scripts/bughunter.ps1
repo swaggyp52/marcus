@@ -302,57 +302,107 @@ if ($searchResults.Count -gt 0) {
     $report += "`n- No direct matches found for search keywords"
 }
 
-# Target selection for patch mode
-if ($Mode -eq "patch") {
-    if ($SelfTest) {
-        # SelfTest target was already created in preflight - highest priority
-        $report += "`n`n### Target Selection"
-        $report += "`n- **Mode:** SelfTest (dedicated test file)"
-        $report += "`n- **Selected:** $Target"
-        $report += "`n- **Status:** Created/Verified"
-    } elseif (-not $Target) {
-        # Infer target from search results
-        if ($topFiles.Count -gt 0) {
-            $inferredTarget = $topFiles[0]
-            $relInferred = $inferredTarget -replace [regex]::Escape($appRoot), ""
-            Write-Warn "No target specified. Inferred: $relInferred"
-            $report += "`n`n### Target Selection"
-            $report += "`n- **Mode:** Inferred (no explicit -Target provided)"
-            $report += "`n- **Selected:** $relInferred"
-            $report += "`n- **Reason:** Top match from codebase search"
-        } else {
-            Write-Fail "Cannot infer target - no search results"
-            $report += "`n`n### Target Selection"
-            $report += "`n- **Mode:** Inferred (no explicit -Target provided)"
-            $report += "`n- **Status:** FAILED - no suitable target found"
-            $report += "`n`n## Outcome`n"
-            $report += "`n**ABORTED** - Cannot proceed without valid target."
-            $report | Out-File -FilePath $ReportFile -Encoding UTF8
-            Write-Host $report
-            exit 1
-        }
-    } else {
-        # Verify explicit target exists
-        $fullTarget = Join-Path $appRoot $Target
-    if (Test-Path $fullTarget) {
-        Write-Ok "Target verified: $Target"
+# --- Target selection (single-path, no fallthrough) ---
+# Outcome: $ResolvedTargets = @(one or more paths), $TargetMode = "selftest" | "explicit" | "inferred"
+
+$ResolvedTargets = @()
+$TargetMode = ""
+
+# 1) SelfTest always wins and must short-circuit
+if ($SelfTest) {
+    $TargetMode = "selftest"
+    
+    # Always use a dedicated selftest file (ignore any provided -Target)
+    $selfTestRel = ".agent\scratch\selftest.txt"
+    $selfTestAbs = Join-Path $RepoRoot $selfTestRel
+    
+    if (-not (Test-Path (Split-Path -Parent $selfTestAbs))) {
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $selfTestAbs) | Out-Null
+    }
+    if (-not (Test-Path $selfTestAbs)) {
+        "# BugHunter SelfTest Target`n`nThis file is used for testing patch mode without modifying real application files." | Out-File -FilePath $selfTestAbs -Encoding UTF8
+    }
+    
+    $ResolvedTargets = @($selfTestRel)   # keep it relative for git add/commit
+    
+    Write-Ok "SelfTest mode: using $selfTestRel"
+    $report += "`n`n### Target Selection"
+    $report += "`n- **Mode:** SelfTest (dedicated test file)"
+    $report += "`n- **Selected:** $selfTestRel"
+    $report += "`n- **Status:** Created/Verified"
+}
+# 2) Explicit target (patch mode strongly prefers this)
+elseif ($Target -and $Target.Trim()) {
+    $TargetMode = "explicit"
+    
+    # Normalize slashes and resolve relative paths
+    $targetRel = $Target.Trim().Replace("/", "\")
+    $targetAbs = Join-Path $RepoRoot $targetRel
+    
+    if (-not (Test-Path $targetAbs)) {
+        Write-Fail "Target file not found: $targetRel"
         $report += "`n`n### Target Selection"
         $report += "`n- **Mode:** Explicit (provided via -Target)"
-        $report += "`n- **Selected:** $Target"
-        $report += "`n- **Status:** Verified"
-    } else {
-        Write-Fail "Target not found: $Target"
-        $report += "`n`n### Target Selection"
-        $report += "`n- **Mode:** Explicit (provided via -Target)"
-        $report += "`n- **Selected:** $Target"
+        $report += "`n- **Selected:** $targetRel"
         $report += "`n- **Status:** FAILED - file does not exist"
         $report += "`n`n## Outcome`n"
         $report += "`n**ABORTED** - Target file not found."
         $report | Out-File -FilePath $ReportFile -Encoding UTF8
         Write-Host $report
         exit 1
-        }
     }
+    
+    $ResolvedTargets = @($targetRel)
+    
+    Write-Ok "Target verified: $targetRel"
+    $report += "`n`n### Target Selection"
+    $report += "`n- **Mode:** Explicit (provided via -Target)"
+    $report += "`n- **Selected:** $targetRel"
+    $report += "`n- **Status:** Verified"
+}
+# 3) Inferred target (allowed only in analyze; patch mode requires explicit)
+else {
+    $TargetMode = "inferred"
+    
+    if ($Mode -eq "patch") {
+        Write-Fail "Patch mode requires -Target or -SelfTest"
+        $report += "`n`n### Target Selection"
+        $report += "`n- **Mode:** Inferred (not allowed in patch mode)"
+        $report += "`n- **Status:** FAILED - patch mode requires explicit target or -SelfTest"
+        $report += "`n`n## Outcome`n"
+        $report += "`n**ABORTED** - Patch mode requires -Target or -SelfTest."
+        $report | Out-File -FilePath $ReportFile -Encoding UTF8
+        Write-Host $report
+        exit 1
+    }
+    
+    # Inference allowed for analyze mode
+    if ($topFiles.Count -gt 0) {
+        $inferredTarget = $topFiles[0]
+        $relInferred = $inferredTarget -replace [regex]::Escape($appRoot), ""
+        $ResolvedTargets = @($relInferred)
+        
+        Write-Warn "No target specified. Inferred: $relInferred"
+        $report += "`n`n### Target Selection"
+        $report += "`n- **Mode:** Inferred (analyze mode)"
+        $report += "`n- **Selected:** $relInferred"
+        $report += "`n- **Reason:** Top match from codebase search"
+    } else {
+        # Analyze mode can proceed without a specific target
+        $report += "`n`n### Target Selection"
+        $report += "`n- **Mode:** Inferred (analyze mode)"
+        $report += "`n- **Status:** No specific target - general analysis"
+    }
+}
+
+# Safety: must resolve at least 1 target for patch mode
+if ($Mode -eq "patch" -and $ResolvedTargets.Count -lt 1) {
+    Write-Fail "No target resolved"
+    $report += "`n`n## Outcome`n"
+    $report += "`n**ABORTED** - No target resolved (Mode=$Mode, SelfTest=$SelfTest, Target='$Target')."
+    $report | Out-File -FilePath $ReportFile -Encoding UTF8
+    Write-Host $report
+    exit 1
 }
 
 # PATCH MODE IMPLEMENTATION
@@ -382,8 +432,10 @@ if ($Mode -eq "patch") {
     $report += "`n- **Branch:** $branchName"
     $report += "`n- **Original Branch:** $originalBranch"
     
-    $targetFile = if ($Target) { $Target } else { $inferredTarget -replace [regex]::Escape($appRoot), "" }
+    # Use the first resolved target (already validated in target selection)
+    $targetFile = $ResolvedTargets[0]
     $report += "`n- **Target File:** $targetFile"
+    $report += "`n- **Target Mode:** $TargetMode"
     $report += "`n- **Patch Strategy:** Minimal guardrail fix"
     $report += "`n- **DryRun:** $DryRun"
     
