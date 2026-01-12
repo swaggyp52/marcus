@@ -303,7 +303,13 @@ if ($searchResults.Count -gt 0) {
 }
 
 # Infer target if not provided (patch mode)
-if ($Mode -eq "patch" -and -not $Target -and -not $SelfTest) {
+if ($Mode -eq "patch" -and $SelfTest) {
+    # SelfTest target was already created in preflight - highest priority
+    $report += "`n`n### Target Selection"
+    $report += "`n- **Mode:** SelfTest (dedicated test file)"
+    $report += "`n- **Selected:** $Target"
+    $report += "`n- **Status:** Created/Verified"
+} elseif ($Mode -eq "patch" -and -not $Target) {
     if ($topFiles.Count -gt 0) {
         $inferredTarget = $topFiles[0]
         $relInferred = $inferredTarget -replace [regex]::Escape($appRoot), ""
@@ -323,14 +329,8 @@ if ($Mode -eq "patch" -and -not $Target -and -not $SelfTest) {
         Write-Host $report
         exit 1
     }
-} elseif ($Mode -eq "patch" -and $SelfTest) {
-    # SelfTest target was already created in preflight
-    $report += "`n`n### Target Selection"
-    $report += "`n- **Mode:** SelfTest (dedicated test file)"
-    $report += "`n- **Selected:** $Target"
-    $report += "`n- **Status:** Created/Verified"
-} elseif ($Mode -eq "patch" -and $Target -and -not $SelfTest) {
-    # Verify explicit target exists (skip if SelfTest already handled it)
+} elseif ($Mode -eq "patch" -and $Target) {
+    # Verify explicit target exists
     $fullTarget = Join-Path $appRoot $Target
     if (Test-Path $fullTarget) {
         Write-Ok "Target verified: $Target"
