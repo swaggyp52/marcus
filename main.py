@@ -30,9 +30,19 @@ def main():
     server_thread = threading.Thread(target=start_server, daemon=True)
     server_thread.start()
     
-    # Wait a moment for server to start
+    # Wait for server to start with health check
     import time
-    time.sleep(1)
+    import requests
+    max_retries = 10
+    for i in range(max_retries):
+        try:
+            requests.get('http://127.0.0.1:8052/api/health', timeout=1)
+            break
+        except:
+            if i < max_retries - 1:
+                time.sleep(0.5)
+            else:
+                print("Warning: Server may not have started properly")
     
     # Create and start the webview window
     window = webview.create_window(

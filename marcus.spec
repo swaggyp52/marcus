@@ -82,7 +82,7 @@ coll = COLLECT(
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,  # Disabled for better antivirus compatibility
     upx_exclude=[],
     name='Marcus',
 )

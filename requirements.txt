@@ -5,3 +5,4 @@ pywebview==4.4.1
 pyinstaller==6.3.0
 pydantic==2.5.3
 python-multipart==0.0.6
+requests==2.31.0

@@ -68,7 +68,7 @@ async def update_item(item_id: int, item: Item, session: Session = Depends(get_s
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
     
-    item_data = item.dict(exclude_unset=True, exclude={"id"})
+    item_data = item.model_dump(exclude_unset=True, exclude={"id"})
     for key, value in item_data.items():
         setattr(db_item, key, value)
     
