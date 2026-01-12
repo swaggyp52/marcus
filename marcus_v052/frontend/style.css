@@ -1,6 +1,6 @@
 :root{--bg:#06060a;--accent:#00e6ff;--accent2:#7c00ff;--muted:#8b90a0}
 body{margin:0;background:linear-gradient(180deg,#04040a,#081025);color:#dfe7ff;font-family:Inter,Segoe UI,Arial}
-#topbar{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(255,255,255,0.02);backdrop-filter:blur(6px)}
+#topbar{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(255,255,255,0.02);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .brand{font-weight:700;letter-spacing:1px;color:var(--accent)}
 #layout{display:flex;height:calc(100vh - 56px)}
 #globe-pane{flex:1;position:relative}
