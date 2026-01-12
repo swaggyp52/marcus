@@ -43,6 +43,18 @@ param(
 $ErrorActionPreference = "Stop"
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 
+# Initialize RepoRoot if not provided (standalone execution)
+if (-not $RepoRoot) {
+    # Try git
+    $gitRootResult = git rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -eq 0 -and $gitRootResult) {
+        $RepoRoot = $gitRootResult.Trim()
+    } else {
+        # Fallback: assume script is in .agent/scripts, go up 2 levels
+        $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot ".." "..")).Path
+    }
+}
+
 # Helper functions
 function Write-Ok { param([string]$msg) Write-Host "[OK] $msg" -ForegroundColor Green }
 function Write-Fail { param([string]$msg) Write-Host "[FAIL] $msg" -ForegroundColor Red }
