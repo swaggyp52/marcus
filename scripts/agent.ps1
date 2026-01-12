@@ -31,6 +31,10 @@ param(
     
     [string]$Issue,
     [string]$File,
+    [string]$Mode,
+    [string]$Target,
+    [string]$Slug,
+    [switch]$DryRun,
     
     [Parameter(ValueFromRemainingArguments=$true)]
     $ExtraArgs
@@ -111,7 +115,14 @@ try {
     
     # Invoke agent with appropriate parameters
     switch ($Agent) {
-        "bughunter" { & powershell -ExecutionPolicy Bypass -File $agentScript -Issue $Issue -ReportFile $reportFile -RepoRoot $repoRoot }
+        "bughunter" { 
+            $bugArgs = @("-Issue", $Issue, "-ReportFile", $reportFile, "-RepoRoot", $repoRoot)
+            if ($Mode) { $bugArgs += @("-Mode", $Mode) }
+            if ($Target) { $bugArgs += @("-Target", $Target) }
+            if ($Slug) { $bugArgs += @("-Slug", $Slug) }
+            if ($DryRun) { $bugArgs += "-DryRun" }
+            & powershell -ExecutionPolicy Bypass -File $agentScript @bugArgs
+        }
         "refactorer" { & powershell -ExecutionPolicy Bypass -File $agentScript -File $File -ReportFile $reportFile -RepoRoot $repoRoot }
         "testwriter" { & powershell -ExecutionPolicy Bypass -File $agentScript -File $File -ReportFile $reportFile -RepoRoot $repoRoot }
         default { & powershell -ExecutionPolicy Bypass -File $agentScript -ReportFile $reportFile -RepoRoot $repoRoot }
