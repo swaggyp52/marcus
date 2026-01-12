@@ -330,7 +330,7 @@ if ($Mode -eq "patch") {
         Write-Section "Creating Branch"
         $checkoutResult = Invoke-Git -Repo $RepoRoot -Arguments @("checkout", "-b", $branchName)
         $currentBranchResult = Invoke-Git -Repo $RepoRoot -Arguments @("rev-parse", "--abbrev-ref", "HEAD")
-        $currentBranch = if ($currentBranchResult.Success) { $currentBranchResult.Output.Trim() } else { "" }
+        $currentBranch = if ($currentBranchResult.Success) { "$($currentBranchResult.Output)".Trim() } else { "" }
         
         if ($checkoutResult.Success -and $currentBranch -eq $branchName) {
             Write-Ok "Created branch: $branchName"
