@@ -452,7 +452,7 @@ if ($Mode -eq "patch") {
             $qualityExitCode = $LASTEXITCODE
             
             $report += "`n``````"
-            $report += "`n$($qualityOutput -split "`n" | Select-Object -Last 50 -join "`n")"
+            $report += "`n$(($qualityOutput -split "`n" | Select-Object -Last 50) -join "`n")"
             $report += "`n``````"
             $report += "`n`n- **Exit Code:** $qualityExitCode"
             
