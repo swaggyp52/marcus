@@ -294,7 +294,7 @@ if ($Mode -eq "patch") {
     
     if (-not $DryRun) {
         Write-Section "Creating Branch"
-        $gitOutput = git -C $RepoRoot checkout -b $branchName 2>&1
+        & git -C $RepoRoot checkout -b $branchName *>$null
         $gitExitCode = $LASTEXITCODE
         if ($gitExitCode -ne 0) {
             Write-Fail "Failed to create branch (exit code: $gitExitCode)"
@@ -410,9 +410,9 @@ if ($Mode -eq "patch") {
                 Write-Section "Committing Changes"
                 $report += "`n`n## Commit`n"
                 
-                git -C $RepoRoot add $fullTargetPath 2>&1 | Out-Null
+                & git -C $RepoRoot add $fullTargetPath *>$null
                 $commitMsg = "BugHunter patch: $($Issue.Substring(0, [Math]::Min(50, $Issue.Length)))"
-                git -C $RepoRoot commit -m $commitMsg 2>&1 | Out-Null
+                & git -C $RepoRoot commit -m $commitMsg *>$null
                 $commitHash = git -C $RepoRoot rev-parse --short HEAD 2>$null
                 
                 Write-Ok "Changes committed: $commitHash"
