@@ -36,6 +36,8 @@ param(
     
     [switch]$SelfTest,
     
+    [switch]$AllowUnsafeBase,
+    
     [string]$ReportFile,
     [string]$RepoRoot
 )
@@ -235,9 +237,20 @@ if ($Mode -eq "patch") {
     $isSafeBranch = $currentBranch -match "^(main|dev|master)$" -or $currentBranch -match "^agent-tooling/"
     
     if (-not $isSafeBranch -and $currentBranch) {
-        Write-Warn "Base branch not in safe list: $currentBranch"
-        $report += "`n- [WARN] Patch base branch '$currentBranch' not in safe list (main|dev|master|agent-tooling/*)"
-        $report += "`n- **Action recommended:** Checkout main, dev, or agent-tooling/* branch before creating patch"
+        if (-not $AllowUnsafeBase) {
+            Write-Fail "Unsafe base branch '$currentBranch'. Re-run with -AllowUnsafeBase to proceed."
+            $report += "`n- [FAIL] Unsafe base branch '$currentBranch' (not in: main|dev|master|agent-tooling/*)"
+            $report += "`n- **Required:** Pass -AllowUnsafeBase flag to override (use with caution)"
+            $report += "`n`n## Outcome`n"
+            $report += "`n**ABORTED** - Unsafe base branch. Use -AllowUnsafeBase to override."
+            $report | Out-File -FilePath $ReportFile -Encoding UTF8
+            Write-Host $report
+            exit 1
+        } else {
+            Write-Warn "Base branch not in safe list (override): $currentBranch"
+            $report += "`n- [WARN] Base branch not in safe list (override with -AllowUnsafeBase): $currentBranch"
+            $report += "`n- **Risk:** Patch may branch from incomplete/experimental work"
+        }
     } else {
         Write-Ok "Base branch safe: $currentBranch"
         $report += "`n- [OK] Base branch safe: $currentBranch"
