@@ -43,6 +43,22 @@ param(
 $ErrorActionPreference = "Stop"
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 
+# Helper functions (defined early for init logic)
+function Write-Ok { param([string]$msg) Write-Host "[OK] $msg" -ForegroundColor Green }
+function Write-Fail { param([string]$msg) Write-Host "[FAIL] $msg" -ForegroundColor Red }
+function Write-Warn { param([string]$msg) Write-Host "[WARN] $msg" -ForegroundColor Yellow }
+function Write-Section { param([string]$msg) Write-Host "`n=== $msg ===" -ForegroundColor Cyan }
+
+function New-SafeSlug {
+    param([string]$text)
+    $slug = $text -replace '[^a-zA-Z0-9\s-]', '' `
+                  -replace '\s+', '-' `
+                  -replace '-+', '-'
+    $slug = $slug.ToLower().Trim('-')
+    if ($slug.Length -gt 40) { $slug = $slug.Substring(0, 40).Trim('-') }
+    return $slug
+}
+
 # Initialize RepoRoot if not provided (standalone execution)
 if (-not $RepoRoot) {
     # Try git
@@ -55,11 +71,18 @@ if (-not $RepoRoot) {
     }
 }
 
-# Helper functions
-function Write-Ok { param([string]$msg) Write-Host "[OK] $msg" -ForegroundColor Green }
-function Write-Fail { param([string]$msg) Write-Host "[FAIL] $msg" -ForegroundColor Red }
-function Write-Warn { param([string]$msg) Write-Host "[WARN] $msg" -ForegroundColor Yellow }
-function Write-Section { param([string]$msg) Write-Host "`n=== $msg ===" -ForegroundColor Cyan }
+# Initialize ReportFile if not provided (standalone execution)
+if (-not $ReportFile) {
+    $agentDir = Join-Path $RepoRoot ".agent"
+    $reportsDir = Join-Path $agentDir "reports"
+    if (-not (Test-Path $reportsDir)) {
+        New-Item -ItemType Directory -Path $reportsDir -Force | Out-Null
+    }
+    $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $reportSlug = New-SafeSlug -text $Issue
+    if (-not $reportSlug) { $reportSlug = "report" }
+    $ReportFile = Join-Path $reportsDir "bughunter_${reportSlug}_${timestamp}.md"
+}
 
 # Safe git invoker - uses Start-Process to avoid PowerShell NativeCommandError on stderr
 function Invoke-GitSafe {
@@ -116,16 +139,6 @@ function Invoke-Git {
         Output  = $result.Stdout
         Stderr  = $result.Stderr
     }
-}
-
-function New-SafeSlug {
-    param([string]$text)
-    $slug = $text -replace '[^a-zA-Z0-9\s-]', '' `
-                  -replace '\s+', '-' `
-                  -replace '-+', '-'
-    $slug = $slug.ToLower().Trim('-')
-    if ($slug.Length -gt 40) { $slug = $slug.Substring(0, 40).Trim('-') }
-    return $slug
 }
 
 # Get git info

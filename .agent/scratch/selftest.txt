@@ -1,0 +1,5 @@
+﻿# BugHunter analysis: Issue - selftest routing
+
+# BugHunter SelfTest Target
+
+This file is used for testing patch mode without modifying real application files.
