@@ -302,36 +302,38 @@ if ($searchResults.Count -gt 0) {
     $report += "`n- No direct matches found for search keywords"
 }
 
-# Infer target if not provided (patch mode)
-if ($Mode -eq "patch" -and $SelfTest) {
-    # SelfTest target was already created in preflight - highest priority
-    $report += "`n`n### Target Selection"
-    $report += "`n- **Mode:** SelfTest (dedicated test file)"
-    $report += "`n- **Selected:** $Target"
-    $report += "`n- **Status:** Created/Verified"
-} elseif ($Mode -eq "patch" -and -not $Target) {
-    if ($topFiles.Count -gt 0) {
-        $inferredTarget = $topFiles[0]
-        $relInferred = $inferredTarget -replace [regex]::Escape($appRoot), ""
-        Write-Warn "No target specified. Inferred: $relInferred"
+# Target selection for patch mode
+if ($Mode -eq "patch") {
+    if ($SelfTest) {
+        # SelfTest target was already created in preflight - highest priority
         $report += "`n`n### Target Selection"
-        $report += "`n- **Mode:** Inferred (no explicit -Target provided)"
-        $report += "`n- **Selected:** $relInferred"
-        $report += "`n- **Reason:** Top match from codebase search"
+        $report += "`n- **Mode:** SelfTest (dedicated test file)"
+        $report += "`n- **Selected:** $Target"
+        $report += "`n- **Status:** Created/Verified"
+    } elseif (-not $Target) {
+        # Infer target from search results
+        if ($topFiles.Count -gt 0) {
+            $inferredTarget = $topFiles[0]
+            $relInferred = $inferredTarget -replace [regex]::Escape($appRoot), ""
+            Write-Warn "No target specified. Inferred: $relInferred"
+            $report += "`n`n### Target Selection"
+            $report += "`n- **Mode:** Inferred (no explicit -Target provided)"
+            $report += "`n- **Selected:** $relInferred"
+            $report += "`n- **Reason:** Top match from codebase search"
+        } else {
+            Write-Fail "Cannot infer target - no search results"
+            $report += "`n`n### Target Selection"
+            $report += "`n- **Mode:** Inferred (no explicit -Target provided)"
+            $report += "`n- **Status:** FAILED - no suitable target found"
+            $report += "`n`n## Outcome`n"
+            $report += "`n**ABORTED** - Cannot proceed without valid target."
+            $report | Out-File -FilePath $ReportFile -Encoding UTF8
+            Write-Host $report
+            exit 1
+        }
     } else {
-        Write-Fail "Cannot infer target - no search results"
-        $report += "`n`n### Target Selection"
-        $report += "`n- **Mode:** Inferred (no explicit -Target provided)"
-        $report += "`n- **Status:** FAILED - no suitable target found"
-        $report += "`n`n## Outcome`n"
-        $report += "`n**ABORTED** - Cannot proceed without valid target."
-        $report | Out-File -FilePath $ReportFile -Encoding UTF8
-        Write-Host $report
-        exit 1
-    }
-} elseif ($Mode -eq "patch" -and $Target) {
-    # Verify explicit target exists
-    $fullTarget = Join-Path $appRoot $Target
+        # Verify explicit target exists
+        $fullTarget = Join-Path $appRoot $Target
     if (Test-Path $fullTarget) {
         Write-Ok "Target verified: $Target"
         $report += "`n`n### Target Selection"
