@@ -44,41 +44,61 @@ function Write-Fail { param([string]$msg) Write-Host "[FAIL] $msg" -ForegroundCo
 function Write-Warn { param([string]$msg) Write-Host "[WARN] $msg" -ForegroundColor Yellow }
 function Write-Section { param([string]$msg) Write-Host "`n=== $msg ===" -ForegroundColor Cyan }
 
-# Safe git invoker - handles git's harmless stderr without crashing
+# Safe git invoker - uses Start-Process to avoid PowerShell NativeCommandError on stderr
+function Invoke-GitSafe {
+    param(
+        [Parameter(Mandatory=$true)][string]$RepoRoot,
+        [Parameter(Mandatory=$true)][string[]]$Args
+    )
+    
+    $stdoutFile = [System.IO.Path]::GetTempFileName()
+    $stderrFile = [System.IO.Path]::GetTempFileName()
+    
+    try {
+        $gitArgs = @('-C', $RepoRoot) + $Args
+        
+        $p = Start-Process -FilePath "git" `
+            -ArgumentList $gitArgs `
+            -NoNewWindow -Wait -PassThru `
+            -RedirectStandardOutput $stdoutFile `
+            -RedirectStandardError $stderrFile
+        
+        $stdout = ""
+        $stderr = ""
+        if (Test-Path $stdoutFile) { $stdout = (Get-Content -Raw $stdoutFile -ErrorAction SilentlyContinue) }
+        if (Test-Path $stderrFile) { $stderr = (Get-Content -Raw $stderrFile -ErrorAction SilentlyContinue) }
+        
+        # Trim and handle nulls
+        if ($stdout) { $stdout = $stdout.Trim() }
+        if ($stderr) { $stderr = $stderr.Trim() }
+        
+        return [pscustomobject]@{
+            ExitCode = $p.ExitCode
+            Stdout   = $stdout
+            Stderr   = $stderr
+            Args     = $gitArgs
+        }
+    }
+    finally {
+        Remove-Item -Force -ErrorAction SilentlyContinue $stdoutFile, $stderrFile
+    }
+}
+
+# Compatibility wrapper - maps old Invoke-Git API to new Invoke-GitSafe
 function Invoke-Git {
     param(
         [Parameter(Mandatory=$true)][string]$Repo,
         [Parameter(Mandatory=$true)][string[]]$Arguments
     )
     
-    $allArgs = @("-C", $Repo) + $Arguments
-    $result = @{
-        Output = ""
-        Stderr = ""
-        Success = $false
+    $result = Invoke-GitSafe -RepoRoot $Repo -Args $Arguments
+    
+    # Map new API to old API for existing callsites
+    return @{
+        Success = ($result.ExitCode -eq 0)
+        Output  = $result.Stdout
+        Stderr  = $result.Stderr
     }
-    
-    # Save original error action preference and suppress errors from redirected stderr
-    $originalErrorAction = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    
-    try {
-        # Capture both stdout and stderr, but suppress PowerShell's error treatment
-        # This prevents NativeCommandError when git writes to stderr
-        $output = & git $allArgs 2>&1
-        $exitCode = $LASTEXITCODE
-        
-        $result.Output = ($output | Out-String).Trim()
-        $result.Success = ($exitCode -eq 0)
-        
-    } catch {
-        $result.Output = $_.Exception.Message
-        $result.Success = $false
-    } finally {
-        $ErrorActionPreference = $originalErrorAction
-    }
-    
-    return $result
 }
 
 function New-SafeSlug {
