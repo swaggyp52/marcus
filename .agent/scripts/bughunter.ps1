@@ -294,24 +294,21 @@ if ($Mode -eq "patch") {
     
     if (-not $DryRun) {
         Write-Section "Creating Branch"
-        try {
-            $gitOutput = git -C $RepoRoot checkout -b $branchName 2>&1
-            if ($LASTEXITCODE -ne 0) {
-                throw "Git checkout failed with exit code $LASTEXITCODE"
-            }
-            Write-Ok "Created branch: $branchName"
+        $gitOutput = git -C $RepoRoot checkout -b $branchName 2>&1
+        $gitExitCode = $LASTEXITCODE
+        if ($gitExitCode -ne 0) {
+            Write-Fail "Failed to create branch (exit code: $gitExitCode)"
             $report += "`n`n## Branch Creation`n"
-            $report += "`n- [OK] Created and switched to branch: $branchName"
-        } catch {
-            Write-Fail "Failed to create branch: $_"
-            $report += "`n`n## Branch Creation`n"
-            $report += "`n- [FAIL] Failed to create branch: $_"
+            $report += "`n- [FAIL] Failed to create branch (exit code: $gitExitCode)"
             $report += "`n`n## Outcome`n"
             $report += "`n**FAILED** - Could not create patch branch."
             $report | Out-File -FilePath $ReportFile -Encoding UTF8
             Write-Host $report
             exit 1
         }
+        Write-Ok "Created branch: $branchName"
+        $report += "`n`n## Branch Creation`n"
+        $report += "`n- [OK] Created and switched to branch: $branchName"
         
         Write-Section "Applying Patch"
         $report += "`n`n## Patch Application`n"
