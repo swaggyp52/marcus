@@ -16,6 +16,9 @@
     
 .PARAMETER DryRun
     When set, simulates patch without modifying files or committing
+    
+.PARAMETER SelfTest
+    When set in patch mode, applies patch to .agent/scratch/selftest.txt instead of real app files
 #>
 
 param(
@@ -30,6 +33,8 @@ param(
     [string]$Slug,
     
     [switch]$DryRun,
+    
+    [switch]$SelfTest,
     
     [string]$ReportFile,
     [string]$RepoRoot
@@ -278,8 +283,31 @@ if ($searchResults.Count -gt 0) {
     $report += "`n- No direct matches found for search keywords"
 }
 
+# Handle SelfTest mode - use dedicated test file
+if ($Mode -eq "patch" -and $SelfTest) {
+    $Target = ".agent\scratch\selftest.txt"
+    $selftestPath = Join-Path $RepoRoot $Target
+    $selftestDir = Split-Path -Parent $selftestPath
+    
+    # Ensure scratch directory exists
+    if (-not (Test-Path $selftestDir)) {
+        New-Item -ItemType Directory -Path $selftestDir -Force | Out-Null
+    }
+    
+    # Create selftest file if missing
+    if (-not (Test-Path $selftestPath)) {
+        "# BugHunter SelfTest Target`n`nThis file is used for testing patch mode without modifying real application files." | Out-File -FilePath $selftestPath -Encoding UTF8
+    }
+    
+    Write-Ok "SelfTest mode: using $Target"
+    $report += "`n`n### Target Selection"
+    $report += "`n- **Mode:** SelfTest (dedicated test file)"
+    $report += "`n- **Selected:** $Target"
+    $report += "`n- **Status:** Created/Verified"
+}
+
 # Infer target if not provided (patch mode)
-if ($Mode -eq "patch" -and -not $Target) {
+if ($Mode -eq "patch" -and -not $Target -and -not $SelfTest) {
     if ($topFiles.Count -gt 0) {
         $inferredTarget = $topFiles[0]
         $relInferred = $inferredTarget -replace [regex]::Escape($appRoot), ""
@@ -299,8 +327,8 @@ if ($Mode -eq "patch" -and -not $Target) {
         Write-Host $report
         exit 1
     }
-} elseif ($Mode -eq "patch" -and $Target) {
-    # Verify explicit target exists
+} elseif ($Mode -eq "patch" -and $Target -and -not $SelfTest) {
+    # Verify explicit target exists (skip if SelfTest already handled it)
     $fullTarget = Join-Path $appRoot $Target
     if (Test-Path $fullTarget) {
         Write-Ok "Target verified: $Target"
