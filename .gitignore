@@ -11,6 +11,7 @@ dist/
 
 # Agent generated artifacts
 .agent/index/
+.agent/reports/
 docs/REPORTS/
 
 # Runtime database (regenerated on each run)
