@@ -59,10 +59,13 @@ function Invoke-Git {
     }
     
     try {
-        # Capture both streams
-        $result.Output = & git $allArgs 2>&1
+        # Capture both streams and suppress stderr-as-error
+        $output = & git $allArgs 2>&1
         if ($LASTEXITCODE -eq 0) {
             $result.Success = $true
+            $result.Output = ($output | Out-String).Trim()
+        } else {
+            $result.Output = ($output | Out-String).Trim()
         }
         return $result
     } catch {
@@ -133,8 +136,9 @@ if ($Mode -eq "patch") {
     
     # Check git status
     $statusResult = Invoke-Git -Repo $RepoRoot -Arguments @("status", "--porcelain")
-    $gitStatus = if ($statusResult.Success) { $statusResult.Output } else { "" }
-    if ($gitStatus.Trim()) {
+    if ($null -eq $statusResult) { $statusResult = @{ Success = $false; Output = "" } }
+    $gitStatus = if ($statusResult -and $statusResult.Success) { $statusResult.Output } else { "" }
+    if ($gitStatus -and $gitStatus.Trim()) {
         Write-Warn "Working directory not clean"
         $report += "`n- [WARN] Working directory not clean:"
         $report += "`n``````"
