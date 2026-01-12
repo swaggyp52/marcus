@@ -1,0 +1,30 @@
+﻿{
+    "major_files":  [
+                        {
+                            "file":  "launcher.py",
+                            "purpose":  "App entrypoint"
+                        },
+                        {
+                            "file":  "backend/api.py",
+                            "purpose":  "FastAPI REST server"
+                        },
+                        {
+                            "file":  "backend/models.py",
+                            "purpose":  "SQLModel definitions"
+                        },
+                        {
+                            "file":  "frontend/index.html",
+                            "purpose":  "HTML structure"
+                        },
+                        {
+                            "file":  "frontend/style.css",
+                            "purpose":  "CSS design system"
+                        },
+                        {
+                            "file":  "frontend/app.js",
+                            "purpose":  "JavaScript logic"
+                        }
+                    ],
+    "generated":  "2026-01-12T12:58:29.3976170-05:00",
+    "python_files":  5
+}
