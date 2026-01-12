@@ -26,7 +26,7 @@
 
 param(
     [Parameter(Position=0)]
-    [ValidateSet("builddoctor", "bughunter", "refactorer", "testwriter", "docindexer", "releasesheriff", "help")]
+    [ValidateSet("builddoctor", "bughunter", "refactorer", "testwriter", "docindexer", "releasesheriff", "workspace-new", "workspace-index", "help")]
     [string]$Agent = "help",
     
     [string]$Issue,
@@ -34,7 +34,11 @@ param(
     [string]$Mode,
     [string]$Target,
     [string]$Slug,
+    [string]$Name,
+    [string]$Workspace,
     [switch]$DryRun,
+    [switch]$Force,
+    [switch]$SkipIndex,
     
     [Parameter(ValueFromRemainingArguments=$true)]
     $ExtraArgs
@@ -95,6 +99,10 @@ function Show-Usage {
     Write-Host "  testwriter       Improve test coverage" -ForegroundColor Gray
     Write-Host "  releasesheriff   Validate release readiness" -ForegroundColor Gray
     Write-Host ""
+    Write-Host "Workspace Agents:" -ForegroundColor Cyan
+    Write-Host "  workspace-new    Create a new workspace" -ForegroundColor Gray
+    Write-Host "  workspace-index  Index a workspace's sources" -ForegroundColor Gray
+    Write-Host ""
     Write-Host "Other:" -ForegroundColor Cyan
     Write-Host "  help             Show this message" -ForegroundColor Gray
     Write-Host ""
@@ -135,6 +143,38 @@ Write-Host "Agent Runner: $Agent" -ForegroundColor Cyan
 Write-Host "Report: $reportFile" -ForegroundColor Gray
 Write-Host "═════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host ""
+
+# Handle workspace agents first (before main agent routing)
+if ($Agent -eq "workspace-new") {
+    $workspaceNewScript = Join-Path $scriptsDir "workspace_new.ps1"
+    if (-not (Test-Path $workspaceNewScript)) {
+        throw "workspace_new.ps1 not found: $workspaceNewScript"
+    }
+    Write-Host "[OK] Invoking workspace-new..." -ForegroundColor Green
+    $workspaceParams = @{
+        Name = $Name
+        Force = $Force
+        SkipIndex = $SkipIndex
+    }
+    & $workspaceNewScript @workspaceParams
+    exit 0
+}
+
+if ($Agent -eq "workspace-index") {
+    $workspaceIndexScript = Join-Path $scriptsDir "workspace_index.ps1"
+    if (-not (Test-Path $workspaceIndexScript)) {
+        throw "workspace_index.ps1 not found: $workspaceIndexScript"
+    }
+    if (-not $Workspace) {
+        throw "workspace-index requires -Workspace parameter"
+    }
+    Write-Host "[OK] Invoking workspace-index..." -ForegroundColor Green
+    $indexParams = @{
+        Workspace = $Workspace
+    }
+    & $workspaceIndexScript @indexParams
+    exit 0
+}
 
 # Route to appropriate agent
 try {
