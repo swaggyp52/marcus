@@ -294,21 +294,21 @@ if ($Mode -eq "patch") {
     
     if (-not $DryRun) {
         Write-Section "Creating Branch"
-        & git -C $RepoRoot checkout -b $branchName *>$null
-        $gitExitCode = $LASTEXITCODE
-        if ($gitExitCode -ne 0) {
-            Write-Fail "Failed to create branch (exit code: $gitExitCode)"
+        git -C $RepoRoot checkout -b $branchName 2>$null | Out-Null
+        if (git -C $RepoRoot rev-parse --abbrev-ref HEAD 2>$null | Select-String $branchName) {
+            Write-Ok "Created branch: $branchName"
             $report += "`n`n## Branch Creation`n"
-            $report += "`n- [FAIL] Failed to create branch (exit code: $gitExitCode)"
+            $report += "`n- [OK] Created and switched to branch: $branchName"
+        } else {
+            Write-Fail "Failed to create or switch to branch"
+            $report += "`n`n## Branch Creation`n"
+            $report += "`n- [FAIL] Failed to create or switch to branch"
             $report += "`n`n## Outcome`n"
             $report += "`n**FAILED** - Could not create patch branch."
             $report | Out-File -FilePath $ReportFile -Encoding UTF8
             Write-Host $report
             exit 1
         }
-        Write-Ok "Created branch: $branchName"
-        $report += "`n`n## Branch Creation`n"
-        $report += "`n- [OK] Created and switched to branch: $branchName"
         
         Write-Section "Applying Patch"
         $report += "`n`n## Patch Application`n"
@@ -410,9 +410,9 @@ if ($Mode -eq "patch") {
                 Write-Section "Committing Changes"
                 $report += "`n`n## Commit`n"
                 
-                & git -C $RepoRoot add $fullTargetPath *>$null
+                $null = git -C $RepoRoot add $fullTargetPath 2>$null
                 $commitMsg = "BugHunter patch: $($Issue.Substring(0, [Math]::Min(50, $Issue.Length)))"
-                & git -C $RepoRoot commit -m $commitMsg *>$null
+                $null = git -C $RepoRoot commit -m $commitMsg 2>$null
                 $commitHash = git -C $RepoRoot rev-parse --short HEAD 2>$null
                 
                 Write-Ok "Changes committed: $commitHash"
@@ -435,10 +435,10 @@ if ($Mode -eq "patch") {
                 $report += "`n`n## Rollback`n"
                 $report += "`n- Quality gate failed - rolling back changes..."
                 
-                git -C $RepoRoot restore --staged . 2>&1 | Out-Null
-                git -C $RepoRoot restore . 2>&1 | Out-Null
-                git -C $RepoRoot checkout $originalBranch 2>&1 | Out-Null
-                git -C $RepoRoot branch -D $branchName 2>&1 | Out-Null
+                $null = git -C $RepoRoot restore --staged . 2>$null
+                $null = git -C $RepoRoot restore . 2>$null
+                $null = git -C $RepoRoot checkout $originalBranch 2>$null
+                $null = git -C $RepoRoot branch -D $branchName 2>$null
                 
                 Write-Warn "Rolled back to original state"
                 $report += "`n- [OK] Restored working tree"
