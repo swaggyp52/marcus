@@ -415,8 +415,18 @@ if ($Mode -eq "patch") {
         Write-Section "Applying Patch"
         $report += "`n`n## Patch Application`n"
         
-        # Determine patch based on issue keywords
-        $fullTargetPath = if ($Target) { Join-Path $appRoot $Target } else { $inferredTarget }
+        # Determine patch target path
+        if ($SelfTest) {
+            # SelfTest uses RepoRoot-relative path, not appRoot
+            $fullTargetPath = Join-Path $RepoRoot $Target
+        } elseif ($Target) {
+            # Regular target uses appRoot
+            $fullTargetPath = Join-Path $appRoot $Target
+        } else {
+            # Inferred target is already a full path
+            $fullTargetPath = $inferredTarget
+        }
+        
         $patchApplied = $false
         $patchDescription = ""
         
