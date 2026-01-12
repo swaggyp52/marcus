@@ -59,14 +59,13 @@ function Invoke-Git {
     }
     
     try {
-        # Capture both streams and suppress stderr-as-error
+        # Capture stderr separately to check git exit code accurately
         $output = & git $allArgs 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            $result.Success = $true
-            $result.Output = ($output | Out-String).Trim()
-        } else {
-            $result.Output = ($output | Out-String).Trim()
-        }
+        $exitCode = $LASTEXITCODE
+        
+        $result.Output = ($output | Out-String).Trim()
+        $result.Success = ($exitCode -eq 0)
+        
         return $result
     } catch {
         $result.Output = $_.Exception.Message
