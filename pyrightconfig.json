@@ -1,8 +1,11 @@
 {
   "typeCheckingMode": "standard",
   "pythonVersion": "3.12",
-  "include": ["marcus_app", "scripts", "tests"],
+  "include": ["marcus_app", "marcus_v052", "scripts", "tests"],
   "exclude": ["venv", "build", "dist", ".venv"],
+  "extraPaths": [".", "./marcus_app", "./marcus_v052"],
+  "venvPath": ".",
+  "venv": ".venv",
   "reportMissingImports": true,
   "reportMissingModuleSource": false,
   "reportMissingTypeStubs": false,
