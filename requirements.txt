@@ -19,3 +19,4 @@ aiofiles==25.1.0
 # Packaging / Desktop
 pywebview==3.7
 pyinstaller==6.17.0
+python-dotenv==1.0.1
