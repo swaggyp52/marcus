@@ -11,9 +11,20 @@ param(
 $ErrorActionPreference = "Stop"
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 
+# Get git info
+$gitHash = git -C $RepoRoot rev-parse --short HEAD 2>$null
+if (-not $gitHash) { $gitHash = "N/A" }
+
+$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
 $report = @"
 # BuildDoctor Report
-$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+**Timestamp:** $timestamp  
+**Repo Commit:** $gitHash  
+**Agent:** BuildDoctor  
+**Invocation:** builddoctor  
+
+---
 
 ## Environment Validation
 

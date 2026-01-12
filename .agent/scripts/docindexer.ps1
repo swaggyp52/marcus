@@ -13,9 +13,20 @@ try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 
 Write-Host "[DocIndexer] Analyzing repository..." -ForegroundColor Green
 
+# Get git info
+$gitHash = git -C $RepoRoot rev-parse --short HEAD 2>$null
+if (-not $gitHash) { $gitHash = "N/A" }
+
+$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
 $report = @"
 # DocIndexer Report
-$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+**Timestamp:** $timestamp  
+**Repo Commit:** $gitHash  
+**Agent:** DocIndexer  
+**Invocation:** docindexer  
+
+---
 
 ## Repository Index Generation
 

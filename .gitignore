@@ -9,3 +9,14 @@ dist/
 .idea/
 *.log
 
+# Agent generated artifacts
+.agent/index/
+docs/REPORTS/
+
+# Runtime database (regenerated on each run)
+marcus_v052/data/*.db
+
+# Build packages / distribution artifacts
+dist_package/
+*.zip
+
