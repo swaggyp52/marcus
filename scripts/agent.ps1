@@ -30,7 +30,10 @@ param(
     [string]$Agent = "help",
     
     [string]$Issue,
-    [string]$File
+    [string]$File,
+    
+    [Parameter(ValueFromRemainingArguments=$true)]
+    $ExtraArgs
 )
 
 $ErrorActionPreference = "Stop"
