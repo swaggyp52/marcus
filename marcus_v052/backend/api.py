@@ -55,6 +55,9 @@ def health():
 @app.get("/")
 async def root():
     try:
+        index_file = BASE / "frontend" / "index.html"
+        if index_file.exists():
+            return HTMLResponse(content=index_file.read_text())
         return HTMLResponse(content="<!DOCTYPE html><html><head><title>Marcus v052</title><link rel=\"stylesheet\" href=\"/static/style.css\"></head><body><div id=\"app\"></div><script type=\"module\" src=\"/static/app.js\"></script></body></html>")
     except Exception as e:
         return HTMLResponse(content=f"Error: {str(e)}", status_code=500)
