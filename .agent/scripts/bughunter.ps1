@@ -351,6 +351,7 @@ if ($Mode -eq "patch") {
         $report | Out-File -FilePath $ReportFile -Encoding UTF8
         Write-Host $report
         exit 1
+        }
     }
 }
 
