@@ -1,5 +1,5 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import SQLModel, Session, create_engine, select
 from pathlib import Path
@@ -7,23 +7,23 @@ import shutil
 import re
 import sys
 import os
-from typing import List
-from .models import ClassModel, TaskModel, FileModel, Link
+from .models import ClassModel, TaskModel, FileModel
 from .ollama_adapter import OllamaAdapter
-import datetime
 
-# In frozen/bundled mode, resources are stored relative to sys.executable (EXE location)
-# In dev mode, __file__ is in backend/ subdirectory
-if getattr(sys, 'frozen', False):
-    # Bundled: resources in same dir as EXE (or in _internal subfolder)
-    # Check if resources are in _internal (PyInstaller temp directory)
-    if os.path.exists(os.path.join(sys._MEIPASS, 'frontend')):
-        BASE = Path(sys._MEIPASS)
-    else:
-        BASE = Path(sys.executable).parent
-else:
-    # Dev: backend is parent.parent of api.py
-    BASE = Path(__file__).parent.parent
+
+def get_base_path() -> Path:
+    """Get base path for resources (works in both frozen and dev modes)."""
+    if getattr(sys, 'frozen', False):
+        # PyInstaller sets _MEIPASS when bundled
+        meipass = getattr(sys, '_MEIPASS', None)
+        if meipass and os.path.exists(os.path.join(meipass, 'frontend')):
+            return Path(meipass)
+        return Path(sys.executable).parent
+    # Dev mode: api.py is in backend/, BASE is parent.parent
+    return Path(__file__).parent.parent
+
+
+BASE: Path = get_base_path()
 
 DATA_DIR = BASE / "data"
 FILES_DIR = DATA_DIR / "files"
@@ -36,19 +36,10 @@ engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
 
 app = FastAPI(title="Marcus v052", version="0.1")
 
-# mount static frontend
-frontend_dir = BASE / "frontend"
-import sys
-import os as _os
-print(f"DEBUG: sys.frozen={getattr(sys, 'frozen', False)}")
-print(f"DEBUG: BASE={BASE}")
-print(f"DEBUG: frontend_dir={frontend_dir}")
-print(f"DEBUG: frontend_dir.exists()={frontend_dir.exists()}")
+# Mount static frontend
+frontend_dir: Path = BASE / "frontend"
 if frontend_dir.exists():
-    print(f"DEBUG: Mounting StaticFiles at {frontend_dir}")
     app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
-else:
-    print(f"DEBUG: frontend_dir does not exist!")
 
 # create tables
 @app.on_event("startup")
