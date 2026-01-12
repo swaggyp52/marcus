@@ -73,15 +73,24 @@ if (-not $RepoRoot) {
 
 # Initialize ReportFile if not provided (standalone execution)
 if (-not $ReportFile) {
-    $agentDir = Join-Path $RepoRoot ".agent"
-    $reportsDir = Join-Path $agentDir "reports"
-    if (-not (Test-Path $reportsDir)) {
-        New-Item -ItemType Directory -Path $reportsDir -Force | Out-Null
-    }
     $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
     $reportSlug = New-SafeSlug -text $Issue
     if (-not $reportSlug) { $reportSlug = "report" }
-    $ReportFile = Join-Path $reportsDir "bughunter_${reportSlug}_${timestamp}.md"
+    
+    # Primary: docs/REPORTS/ (canonical location, matches agent.ps1 contract)
+    $primaryReportsDir = Join-Path $RepoRoot "docs\REPORTS"
+    if (-not (Test-Path $primaryReportsDir)) {
+        New-Item -ItemType Directory -Path $primaryReportsDir -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+    
+    if (Test-Path $primaryReportsDir) {
+        $ReportFile = Join-Path $primaryReportsDir "bughunter_${reportSlug}_${timestamp}.md"
+    } else {
+        # Fallback: .agent/reports/ (if docs/ not writable)
+        $fallbackReportsDir = Join-Path $RepoRoot ".agent\reports"
+        New-Item -ItemType Directory -Path $fallbackReportsDir -Force -ErrorAction SilentlyContinue | Out-Null
+        $ReportFile = Join-Path $fallbackReportsDir "bughunter_${reportSlug}_${timestamp}.md"
+    }
 }
 
 # Safe git invoker - uses Start-Process to avoid PowerShell NativeCommandError on stderr
@@ -217,6 +226,21 @@ if ($Mode -eq "patch") {
         Write-Fail "Quality gate not found"
         $report += "`n- [FAIL] Quality gate not found: scripts\quality.ps1"
         $preflightPassed = $false
+    }
+    
+    # Check base branch is safe (prevent patching from random branches)
+    $currentBranchResult = Invoke-Git -Repo $RepoRoot -Arguments @("branch", "--show-current")
+    $currentBranch = if ($currentBranchResult -and $currentBranchResult.Success) { $currentBranchResult.Output.Trim() } else { "" }
+    
+    $isSafeBranch = $currentBranch -match "^(main|dev|master)$" -or $currentBranch -match "^agent-tooling/"
+    
+    if (-not $isSafeBranch -and $currentBranch) {
+        Write-Warn "Base branch not in safe list: $currentBranch"
+        $report += "`n- [WARN] Patch base branch '$currentBranch' not in safe list (main|dev|master|agent-tooling/*)"
+        $report += "`n- **Action recommended:** Checkout main, dev, or agent-tooling/* branch before creating patch"
+    } else {
+        Write-Ok "Base branch safe: $currentBranch"
+        $report += "`n- [OK] Base branch safe: $currentBranch"
     }
     
     if (-not $preflightPassed) {
