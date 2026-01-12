@@ -1,4 +1,4 @@
-# Marcus - Local-First Academic Operating Environment
+﻿# Marcus - Local-First Academic Operating Environment
 
 **Version 0.1.0 MVP**
 
@@ -228,11 +228,40 @@ MIT License - See LICENSE file
 
 Built with:
 - FastAPI - Backend framework
-- SQLAlchemy - ORM
+- SQLAlchemy/SQLModel - ORM
 - Tesseract - OCR engine
 - pypdf - PDF processing
 - python-docx - DOCX processing
 
 ---
 
-**Marcus v0.1.0** - Your local-first academic operating environment
+## Marcus v052 — Life Globe (desktop build)
+
+FastAPI + PyInstaller Windows desktop app with a neon 2D canvas globe UI, SQLModel/SQLite backend, and automation scripts for build/smoke-test. Ollama adapter included for local LLM parsing/planning when available. Located under `marcus_v052/`.
+
+### Quick start (dev)
+
+```powershell
+cd marcus_v052
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python -m uvicorn backend.api:app --reload --host 127.0.0.1 --port 8000
+# open http://127.0.0.1:8000
+```
+
+### Build EXE (Windows)
+```powershell
+cd marcus_v052
+.\scripts\build_windows_exe.ps1
+```
+
+### Smoke test the EXE
+```powershell
+cd marcus_v052
+.\scripts\smoke_test.ps1
+```
+
+### Notes
+- Frontend is vanilla ES modules + canvas neon globe (2D fallback). Three.js globe can be added later.
+- Ollama adapter is included; if Ollama runs locally, chat will use it for parsing/planning.

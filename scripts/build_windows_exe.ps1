@@ -1,4 +1,4 @@
-# Build script for Marcus Windows EXE
+﻿# Build script for Marcus Windows EXE (main app)
 # Steps:
 # 1) Activate venv
 # 2) Install requirements
