@@ -1,0 +1,23 @@
+[project]
+name = "marcus"
+version = "0.5.2"
+description = "A FastAPI + PyInstaller Windows desktop app with neon Web UI"
+authors = [{name = "Marcus Team"}]
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "sqlmodel>=0.0.14",
+    "pywebview>=4.4.1",
+    "pyinstaller>=6.3.0",
+    "pydantic>=2.5.3",
+    "python-multipart>=0.0.6",
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"

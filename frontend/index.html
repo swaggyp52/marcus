@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcus v0.5.2 - Neon Dashboard</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="neon-title">MARCUS</h1>
+            <p class="version">v0.5.2</p>
+        </header>
+
+        <div class="main-layout">
+            <div class="globe-container">
+                <canvas id="globe"></canvas>
+                <div class="globe-info">
+                    <p class="info-text">Interactive 3D Globe</p>
+                </div>
+            </div>
+
+            <div class="content-panel">
+                <div class="panel">
+                    <h2 class="panel-title">Data Items</h2>
+                    <div class="controls">
+                        <button id="addItemBtn" class="neon-button">+ Add New Item</button>
+                        <button id="refreshBtn" class="neon-button secondary">↻ Refresh</button>
+                    </div>
+                    <div id="itemsList" class="items-list">
+                        <!-- Items will be populated here -->
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2 class="panel-title">System Status</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">API Status:</span>
+                            <span id="apiStatus" class="status-value">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Items Count:</span>
+                            <span id="itemsCount" class="status-value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Version:</span>
+                            <span class="status-value">0.5.2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div id="addItemModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 class="modal-title">Add New Item</h2>
+            <form id="addItemForm">
+                <div class="form-group">
+                    <label for="itemName">Name:</label>
+                    <input type="text" id="itemName" name="name" required class="neon-input">
+                </div>
+                <div class="form-group">
+                    <label for="itemDescription">Description:</label>
+                    <textarea id="itemDescription" name="description" class="neon-input"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="itemLatitude">Latitude:</label>
+                    <input type="number" id="itemLatitude" name="latitude" step="any" class="neon-input">
+                </div>
+                <div class="form-group">
+                    <label for="itemLongitude">Longitude:</label>
+                    <input type="number" id="itemLongitude" name="longitude" step="any" class="neon-input">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="neon-button">Create Item</button>
+                    <button type="button" class="neon-button secondary" id="cancelBtn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="/static/js/main.js"></script>
+</body>
+</html>
