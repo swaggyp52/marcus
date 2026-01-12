@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Marcus v052 — Life Globe</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div id="topbar">
+    <div class="brand">Marcus — Life Globe</div>
+    <div id="status">Status: <span id="status-text">starting</span></div>
+  </div>
+  <div id="layout">
+    <div id="globe-pane">
+      <canvas id="globe"></canvas>
+    </div>
+    <div id="chat-pane">
+      <div id="chat-log"></div>
+      <form id="chat-form">
+        <input id="chat-input" placeholder="Ask Marcus..." autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+      <div id="upload-area">
+        <input type="file" id="fileInput" accept=".txt,.pdf" title="Attach a document (TXT or PDF)" aria-label="Attach a document">
+        <button id="uploadBtn">Upload</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>
