@@ -332,6 +332,13 @@ if ($Mode -eq "patch") {
         $currentBranchResult = Invoke-Git -Repo $RepoRoot -Arguments @("rev-parse", "--abbrev-ref", "HEAD")
         $currentBranch = if ($currentBranchResult.Success) { "$($currentBranchResult.Output)".Trim() } else { "" }
         
+        $report += "`n`n### DEBUG INFO"
+        $report += "`n- Checkout Success: $($checkoutResult.Success)"
+        $report += "`n- Checkout Output: [$($checkoutResult.Output)]"
+        $report += "`n- Current Branch: [$currentBranch]"
+        $report += "`n- Expected Branch: [$branchName]"
+        $report += "`n- Match: $($currentBranch -eq $branchName)"
+        
         if ($checkoutResult.Success -and $currentBranch -eq $branchName) {
             Write-Ok "Created branch: $branchName"
             $report += "`n`n## Branch Creation`n"
