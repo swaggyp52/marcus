@@ -58,19 +58,27 @@ function Invoke-Git {
         Success = $false
     }
     
+    # Save original error action preference and suppress errors from redirected stderr
+    $originalErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    
     try {
-        # Capture stderr separately to check git exit code accurately
+        # Capture both stdout and stderr, but suppress PowerShell's error treatment
+        # This prevents NativeCommandError when git writes to stderr
         $output = & git $allArgs 2>&1
         $exitCode = $LASTEXITCODE
         
         $result.Output = ($output | Out-String).Trim()
         $result.Success = ($exitCode -eq 0)
         
-        return $result
     } catch {
         $result.Output = $_.Exception.Message
-        return $result
+        $result.Success = $false
+    } finally {
+        $ErrorActionPreference = $originalErrorAction
     }
+    
+    return $result
 }
 
 function New-SafeSlug {
