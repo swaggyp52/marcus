@@ -11,6 +11,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Load workspace library
+. (Join-Path $PSScriptRoot "_workspace_lib.ps1")
+
 function Fail([string]$msg) { Write-Error $msg; exit 1 }
 
 $workspaceRoot = (Resolve-Path $Root).Path
@@ -48,5 +51,10 @@ if ($files.Length -gt 0) {
 } else {
   "[]" | Set-Content -Path $outPath -Encoding UTF8
 }
+
+# Archive to run folder
+$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $ws -Command "workspace-index"
+$archived = @(Add-ToRun -FilePath $outPath -RunFolder $runMeta.RunFolder)
+Complete-WorkspaceRun -WorkspaceRoot $ws -RunMetadata $runMeta -ArchivedFiles $archived
 
 Write-Host "[OK] Wrote index: $outPath"

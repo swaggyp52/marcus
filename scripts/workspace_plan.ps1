@@ -23,6 +23,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Load workspace library
+. (Join-Path $PSScriptRoot "_workspace_lib.ps1")
+
 # Resolve workspace location
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $workspaceRoot = Join-Path $repoRoot "workspaces\$Name"
@@ -246,6 +249,14 @@ $nextActionsContent += @"
 "@
 
 $nextActionsContent | Set-Content $nextActionsPath -Encoding UTF8
+
+# Archive to run folder
+$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $workspaceRoot -Command "workspace-plan"
+$archived = @(
+    (Add-ToRun -FilePath $studyPlanPath -RunFolder $runMeta.RunFolder),
+    (Add-ToRun -FilePath $nextActionsPath -RunFolder $runMeta.RunFolder)
+) | Where-Object { $_ -ne $null }
+Complete-WorkspaceRun -WorkspaceRoot $workspaceRoot -RunMetadata $runMeta -ArchivedFiles $archived
 
 Write-Host "[OK] Workspace plan generated: $Name"
 Write-Host "     - $studyPlanPath"

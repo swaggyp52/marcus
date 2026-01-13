@@ -28,6 +28,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Load workspace library
+. (Join-Path $PSScriptRoot "_workspace_lib.ps1")
+
 # Resolve workspace location
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $workspaceRoot = Join-Path $repoRoot "workspaces\$Name"
@@ -233,6 +236,14 @@ foreach ($q in $questions) {
 }
 
 $answersContent | Set-Content $answersPath -Encoding UTF8
+
+# Archive to run folder
+$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $workspaceRoot -Command "workspace-quiz"
+$archived = @(
+    (Add-ToRun -FilePath $quizPath -RunFolder $runMeta.RunFolder),
+    (Add-ToRun -FilePath $answersPath -RunFolder $runMeta.RunFolder)
+) | Where-Object { $_ -ne $null }
+Complete-WorkspaceRun -WorkspaceRoot $workspaceRoot -RunMetadata $runMeta -ArchivedFiles $archived
 
 Write-Host "[OK] Quiz generated: $Name ($Count questions)"
 Write-Host "     - $quizPath"
