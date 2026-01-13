@@ -146,22 +146,21 @@ Write-Host ""
 
 # Handle workspace agents first (before main agent routing)
 if ($Agent -eq "workspace-new") {
-    $workspaceNewScript = Join-Path $scriptsDir "workspace_new.ps1"
+    $workspaceNewScript = Join-Path $PSScriptRoot "workspace_new.ps1"
     if (-not (Test-Path $workspaceNewScript)) {
         throw "workspace_new.ps1 not found: $workspaceNewScript"
     }
     Write-Host "[OK] Invoking workspace-new..." -ForegroundColor Green
     $workspaceParams = @{
         Name = $Name
-        Force = $Force
-        SkipIndex = $SkipIndex
     }
+    if ($Force) { $workspaceParams.Force = $true }
     & $workspaceNewScript @workspaceParams
     exit 0
 }
 
 if ($Agent -eq "workspace-index") {
-    $workspaceIndexScript = Join-Path $scriptsDir "workspace_index.ps1"
+    $workspaceIndexScript = Join-Path $PSScriptRoot "workspace_index.ps1"
     if (-not (Test-Path $workspaceIndexScript)) {
         throw "workspace_index.ps1 not found: $workspaceIndexScript"
     }
