@@ -26,7 +26,7 @@
 
 param(
     [Parameter(Position=0)]
-    [ValidateSet("builddoctor", "bughunter", "refactorer", "testwriter", "docindexer", "releasesheriff", "workspace-new", "workspace-index", "workspace-add", "workspace-search", "help")]
+    [ValidateSet("builddoctor", "bughunter", "refactorer", "testwriter", "docindexer", "releasesheriff", "workspace-new", "workspace-index", "workspace-add", "workspace-search", "workspace-summarize", "help")]
     [string]$Agent = "help",
     
     [string]$Issue,
@@ -103,10 +103,11 @@ function Show-Usage {
     Write-Host "  releasesheriff   Validate release readiness" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Workspace Agents:" -ForegroundColor Cyan
-    Write-Host "  workspace-new    Create a new workspace" -ForegroundColor Gray
-    Write-Host "  workspace-index  Index a workspace's sources" -ForegroundColor Gray
-    Write-Host "  workspace-add    Add files to a workspace" -ForegroundColor Gray
-    Write-Host "  workspace-search Search workspace files" -ForegroundColor Gray
+    Write-Host "  workspace-new       Create a new workspace" -ForegroundColor Gray
+    Write-Host "  workspace-index     Index a workspace's sources" -ForegroundColor Gray
+    Write-Host "  workspace-add       Add files to a workspace" -ForegroundColor Gray
+    Write-Host "  workspace-search    Search workspace files" -ForegroundColor Gray
+    Write-Host "  workspace-summarize Generate BRIEF/KEY_TERMS/OPEN_QUESTIONS" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Other:" -ForegroundColor Cyan
     Write-Host "  help             Show this message" -ForegroundColor Gray
@@ -215,6 +216,22 @@ if ($Agent -eq "workspace-search") {
         Query = $Query
     }
     & $workspaceSearchScript @searchParams
+    exit 0
+}
+
+if ($Agent -eq "workspace-summarize") {
+    $workspaceSummarizeScript = Join-Path $PSScriptRoot "workspace_summarize.ps1"
+    if (-not (Test-Path $workspaceSummarizeScript)) {
+        throw "workspace_summarize.ps1 not found: $workspaceSummarizeScript"
+    }
+    if (-not $Name) {
+        throw "workspace-summarize requires -Name parameter"
+    }
+    Write-Host "[OK] Invoking workspace-summarize..." -ForegroundColor Green
+    $summarizeParams = @{
+        Name = $Name
+    }
+    & $workspaceSummarizeScript @summarizeParams
     exit 0
 }
 
