@@ -14,6 +14,9 @@ dist/
 .agent/reports/
 docs/REPORTS/
 
+# Workspace user data
+/workspaces/
+
 # Runtime database (regenerated on each run)
 marcus_v052/data/*.db
 

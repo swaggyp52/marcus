@@ -26,7 +26,7 @@
 
 param(
     [Parameter(Position=0)]
-    [ValidateSet("builddoctor", "bughunter", "refactorer", "testwriter", "docindexer", "releasesheriff", "workspace-new", "workspace-index", "help")]
+    [ValidateSet("builddoctor", "bughunter", "refactorer", "testwriter", "docindexer", "releasesheriff", "workspace-new", "workspace-index", "workspace-add", "workspace-search", "help")]
     [string]$Agent = "help",
     
     [string]$Issue,
@@ -36,6 +36,9 @@ param(
     [string]$Slug,
     [string]$Name,
     [string]$Workspace,
+    [string]$Path,
+    [string[]]$Paths,
+    [string]$Query,
     [switch]$DryRun,
     [switch]$Force,
     [switch]$SkipIndex,
@@ -102,6 +105,8 @@ function Show-Usage {
     Write-Host "Workspace Agents:" -ForegroundColor Cyan
     Write-Host "  workspace-new    Create a new workspace" -ForegroundColor Gray
     Write-Host "  workspace-index  Index a workspace's sources" -ForegroundColor Gray
+    Write-Host "  workspace-add    Add files to a workspace" -ForegroundColor Gray
+    Write-Host "  workspace-search Search workspace files" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Other:" -ForegroundColor Cyan
     Write-Host "  help             Show this message" -ForegroundColor Gray
@@ -172,6 +177,44 @@ if ($Agent -eq "workspace-index") {
         Name = $Name
     }
     & $workspaceIndexScript @indexParams
+    exit 0
+}
+
+if ($Agent -eq "workspace-add") {
+    $workspaceAddScript = Join-Path $PSScriptRoot "workspace_add.ps1"
+    if (-not (Test-Path $workspaceAddScript)) {
+        throw "workspace_add.ps1 not found: $workspaceAddScript"
+    }
+    if (-not $Name) {
+        throw "workspace-add requires -Name parameter"
+    }
+    Write-Host "[OK] Invoking workspace-add..." -ForegroundColor Green
+    $addParams = @{
+        Name = $Name
+    }
+    if ($Path) { $addParams.Path = $Path }
+    if ($Paths) { $addParams.Paths = $Paths }
+    & $workspaceAddScript @addParams
+    exit 0
+}
+
+if ($Agent -eq "workspace-search") {
+    $workspaceSearchScript = Join-Path $PSScriptRoot "workspace_search.ps1"
+    if (-not (Test-Path $workspaceSearchScript)) {
+        throw "workspace_search.ps1 not found: $workspaceSearchScript"
+    }
+    if (-not $Name) {
+        throw "workspace-search requires -Name parameter"
+    }
+    if (-not $Query) {
+        throw "workspace-search requires -Query parameter"
+    }
+    Write-Host "[OK] Invoking workspace-search..." -ForegroundColor Green
+    $searchParams = @{
+        Name = $Name
+        Query = $Query
+    }
+    & $workspaceSearchScript @searchParams
     exit 0
 }
 

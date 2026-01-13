@@ -23,7 +23,23 @@ New-Item -ItemType Directory -Force $indexDir | Out-Null
 
 $files = @()
 if (Test-Path $sources) {
-  $files = @(Get-ChildItem $sources -Recurse -File -ErrorAction SilentlyContinue | Select-Object FullName, Length, LastWriteTime)
+  $rawFiles = @(Get-ChildItem $sources -Recurse -File -ErrorAction SilentlyContinue)
+  
+  foreach ($file in $rawFiles) {
+    $relativePath = $file.FullName.Substring($ws.Length).TrimStart('\', '/')
+    
+    # Compute SHA256
+    $hash = (Get-FileHash -Path $file.FullName -Algorithm SHA256).Hash
+    
+    $files += [PSCustomObject]@{
+      relativePath = $relativePath
+      fileName = $file.Name
+      extension = $file.Extension
+      bytes = $file.Length
+      lastWriteTimeUtc = $file.LastWriteTimeUtc.ToString("o")
+      sha256 = $hash
+    }
+  }
 }
 
 $outPath = Join-Path $indexDir "sources_index.json"
