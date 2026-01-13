@@ -18,7 +18,10 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string]$Name
+    [string]$Name,
+
+    [Parameter()]
+    [string]$RunId
 )
 
 Set-StrictMode -Version Latest
@@ -228,7 +231,7 @@ No explicit questions found in sources.
 $openQuestionsContent | Set-Content $openQuestionsPath -Encoding UTF8
 
 # Archive to run folder
-$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $workspaceRoot -Command "workspace-summarize"
+$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $workspaceRoot -Command "workspace-summarize" -RunId $RunId
 $archived = @(
     (Add-ToRun -FilePath $briefPath -RunFolder $runMeta.RunFolder),
     (Add-ToRun -FilePath $keyTermsPath -RunFolder $runMeta.RunFolder),

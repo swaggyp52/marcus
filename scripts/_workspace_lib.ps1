@@ -32,7 +32,10 @@ function Initialize-WorkspaceRun {
         [string]$WorkspaceRoot,
         
         [Parameter(Mandatory)]
-        [string]$Command
+        [string]$Command,
+
+        [Parameter()]
+        [string]$RunId
     )
     
     $indexDir = Join-Path $WorkspaceRoot "index"
@@ -43,20 +46,25 @@ function Initialize-WorkspaceRun {
         New-Item -ItemType Directory -Force -Path $runsDir | Out-Null
     }
     
-    # Generate run ID
-    $runId = Get-Date -Format "yyyy-MM-dd_HHmmss"
-    $runFolder = Join-Path $runsDir $runId
+    # Generate or reuse run ID
+    if (-not $RunId) {
+        $RunId = Get-Date -Format "yyyy-MM-dd_HHmmss"
+    }
+
+    $runFolder = Join-Path $runsDir $RunId
     
-    # Create run folder
-    New-Item -ItemType Directory -Force -Path $runFolder | Out-Null
+    # Ensure run folder exists
+    if (-not (Test-Path $runFolder)) {
+        New-Item -ItemType Directory -Force -Path $runFolder | Out-Null
+    }
     
     # Update LATEST.txt
     $latestPath = Join-Path $runsDir "LATEST.txt"
-    $runId | Set-Content $latestPath -Encoding UTF8
+    $RunId | Set-Content $latestPath -Encoding UTF8
     
     @{
         RunFolder = $runFolder
-        RunId = $runId
+        RunId = $RunId
         Timestamp = (Get-Date).ToString("o")
         Command = $Command
     }

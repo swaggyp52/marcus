@@ -22,7 +22,10 @@ param(
     [string]$Name,
     
     [Parameter()]
-    [int]$Count = 15
+    [int]$Count = 15,
+
+    [Parameter()]
+    [string]$RunId
 )
 
 Set-StrictMode -Version Latest
@@ -238,7 +241,7 @@ foreach ($q in $questions) {
 $answersContent | Set-Content $answersPath -Encoding UTF8
 
 # Archive to run folder
-$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $workspaceRoot -Command "workspace-quiz"
+$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $workspaceRoot -Command "workspace-quiz" -RunId $RunId
 $archived = @(
     (Add-ToRun -FilePath $quizPath -RunFolder $runMeta.RunFolder),
     (Add-ToRun -FilePath $answersPath -RunFolder $runMeta.RunFolder)

@@ -5,6 +5,9 @@ param(
   [string]$Name,
 
   [Parameter()]
+  [string]$RunId,
+
+  [Parameter()]
   [string]$Root = (Join-Path $PSScriptRoot "..\workspaces")
 )
 
@@ -53,7 +56,7 @@ if ($files.Length -gt 0) {
 }
 
 # Archive to run folder
-$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $ws -Command "workspace-index"
+$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $ws -Command "workspace-index" -RunId $RunId
 $archived = @(Add-ToRun -FilePath $outPath -RunFolder $runMeta.RunFolder)
 Complete-WorkspaceRun -WorkspaceRoot $ws -RunMetadata $runMeta -ArchivedFiles $archived
 

@@ -26,7 +26,7 @@
 
 param(
     [Parameter(Position=0)]
-    [ValidateSet("builddoctor", "bughunter", "refactorer", "testwriter", "docindexer", "releasesheriff", "workspace-new", "workspace-index", "workspace-add", "workspace-search", "workspace-summarize", "workspace-plan", "workspace-quiz", "help")]
+    [ValidateSet("builddoctor", "bughunter", "refactorer", "testwriter", "docindexer", "releasesheriff", "workspace-new", "workspace-index", "workspace-add", "workspace-search", "workspace-summarize", "workspace-plan", "workspace-quiz", "workspace-run", "help")]
     [string]$Agent = "help",
     
     [string]$Issue,
@@ -111,6 +111,7 @@ function Show-Usage {
     Write-Host "  workspace-summarize Generate BRIEF/KEY_TERMS/OPEN_QUESTIONS" -ForegroundColor Gray
     Write-Host "  workspace-plan      Generate STUDY_PLAN/NEXT_ACTIONS" -ForegroundColor Gray
     Write-Host "  workspace-quiz      Generate practice quiz" -ForegroundColor Gray
+    Write-Host "  workspace-run       Full pipeline (add/index/summarize/plan/quiz)" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Other:" -ForegroundColor Cyan
     Write-Host "  help             Show this message" -ForegroundColor Gray
@@ -268,6 +269,25 @@ if ($Agent -eq "workspace-quiz") {
         Count = $Count
     }
     & $workspaceQuizScript @quizParams
+    exit 0
+}
+
+if ($Agent -eq "workspace-run") {
+    $workspaceRunScript = Join-Path $PSScriptRoot "workspace_run.ps1"
+    if (-not (Test-Path $workspaceRunScript)) {
+        throw "workspace_run.ps1 not found: $workspaceRunScript"
+    }
+    if (-not $Name) {
+        throw "workspace-run requires -Name parameter"
+    }
+    Write-Host "[OK] Invoking workspace-run..." -ForegroundColor Green
+    $runParams = @{
+        Name = $Name
+        Count = $Count
+    }
+    if ($Path) { $runParams.Path = $Path }
+    if ($Paths) { $runParams.Paths = $Paths }
+    & $workspaceRunScript @runParams
     exit 0
 }
 

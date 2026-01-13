@@ -17,7 +17,10 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string]$Name
+    [string]$Name,
+
+    [Parameter()]
+    [string]$RunId
 )
 
 Set-StrictMode -Version Latest
@@ -251,7 +254,7 @@ $nextActionsContent += @"
 $nextActionsContent | Set-Content $nextActionsPath -Encoding UTF8
 
 # Archive to run folder
-$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $workspaceRoot -Command "workspace-plan"
+$runMeta = Initialize-WorkspaceRun -WorkspaceRoot $workspaceRoot -Command "workspace-plan" -RunId $RunId
 $archived = @(
     (Add-ToRun -FilePath $studyPlanPath -RunFolder $runMeta.RunFolder),
     (Add-ToRun -FilePath $nextActionsPath -RunFolder $runMeta.RunFolder)
