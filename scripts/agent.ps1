@@ -165,12 +165,12 @@ if ($Agent -eq "workspace-index") {
     if (-not (Test-Path $workspaceIndexScript)) {
         throw "workspace_index.ps1 not found: $workspaceIndexScript"
     }
-    if (-not $Workspace) {
-        throw "workspace-index requires -Workspace parameter"
+    if (-not $Name) {
+        throw "workspace-index requires -Name parameter"
     }
     Write-Host "[OK] Invoking workspace-index..." -ForegroundColor Green
     $indexParams = @{
-        Workspace = $Workspace
+        Name = $Name
     }
     & $workspaceIndexScript @indexParams
     exit 0
