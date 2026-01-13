@@ -31,7 +31,11 @@ param(
     [string]$Path,
 
     [Parameter(ParameterSetName='Multiple')]
-    [string[]]$Paths
+    [string[]]$Paths,
+
+    [Parameter()]
+    [ValidateSet('auto','skip','fail')]
+    [string]$PdfMode = 'auto'
 )
 
 Set-StrictMode -Version Latest
@@ -56,6 +60,12 @@ if ($PSCmdlet.ParameterSetName -eq 'Single') {
     $filesToAdd = @($Path)
 } else {
     $filesToAdd = $Paths
+}
+
+# Find pdftotext once (if requested)
+$pdfExtractor = $null
+if ($PdfMode -ne 'skip') {
+    $pdfExtractor = Get-Command pdftotext -ErrorAction SilentlyContinue
 }
 
 # Copy files with collision handling
@@ -87,6 +97,44 @@ foreach ($filePath in $filesToAdd) {
 
     Copy-Item -Path $filePath -Destination $destPath -Force
     $addedCount++
+
+    # PDF extraction handling
+    if ($extension -ieq '.pdf') {
+        switch ($PdfMode) {
+            'skip' {
+                Write-Warning "PDF skipped by PdfMode=skip: $destPath"
+                break
+            }
+            'auto' { if (-not $pdfExtractor) { Write-Warning "pdftotext not found; skipping PDF: $filePath"; break } }
+            'fail' { if (-not $pdfExtractor) { throw "pdftotext not found; PdfMode=fail requires extractor. PDF: $filePath" } }
+        }
+
+        if ($PdfMode -ne 'skip' -and $pdfExtractor) {
+            # Determine extracted text path with collision handling (keep .pdf in name)
+            $txtName = "$destName.txt"
+            $txtPath = Join-Path $sourcesDir $txtName
+            $txtCounter = 1
+            while (Test-Path $txtPath) {
+                $txtName = "${destName}_($txtCounter).txt"
+                $txtPath = Join-Path $sourcesDir $txtName
+                $txtCounter++
+            }
+
+            $cmdOutput = & $pdfExtractor.Path "-enc" "UTF-8" "-layout" $destPath $txtPath 2>&1
+            $exitCode = $LASTEXITCODE
+            if ($exitCode -ne 0) {
+                $tail = ($cmdOutput | Select-Object -Last 5) -join " `n"
+                $failMsg = "pdftotext failed (exit $exitCode); skipping PDF: $filePath" + (if ($tail) { " - $tail" } else { "" })
+                if ($PdfMode -eq 'fail') {
+                    throw $failMsg
+                }
+                Write-Warning $failMsg
+                if (Test-Path $txtPath) { Remove-Item $txtPath -ErrorAction SilentlyContinue }
+            } else {
+                Write-Host "[OK] Extracted PDF to $txtPath" -ForegroundColor Green
+            }
+        }
+    }
 }
 
 Write-Host "[OK] Added $addedCount files to $Name"

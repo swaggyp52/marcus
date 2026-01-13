@@ -38,7 +38,9 @@ param(
     [string]$Workspace,
     [string]$Path,
     [string[]]$Paths,
+    [string]$PdfMode,
     [string]$Query,
+    [int]$Top = 10,
     [int]$Count = 15,
     [switch]$DryRun,
     [switch]$Force,
@@ -199,6 +201,7 @@ if ($Agent -eq "workspace-add") {
     }
     if ($Path) { $addParams.Path = $Path }
     if ($Paths) { $addParams.Paths = $Paths }
+    if ($PSBoundParameters.ContainsKey('PdfMode')) { $addParams.PdfMode = $PdfMode }
     & $workspaceAddScript @addParams
     exit 0
 }
@@ -219,6 +222,7 @@ if ($Agent -eq "workspace-search") {
         Name = $Name
         Query = $Query
     }
+    if ($PSBoundParameters.ContainsKey('Top')) { $searchParams.Top = $Top }
     & $workspaceSearchScript @searchParams
     exit 0
 }

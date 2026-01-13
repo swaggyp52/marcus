@@ -22,7 +22,10 @@ param(
     [string]$Name,
 
     [Parameter(Mandatory)]
-    [string]$Query
+    [string]$Query,
+
+    [Parameter()]
+    [int]$Top = 10
 )
 
 Set-StrictMode -Version Latest
@@ -107,5 +110,5 @@ foreach ($entry in $indexData) {
 if ($results.Count -eq 0) {
     Write-Host "No matches found for: $Query"
 } else {
-    $results | Sort-Object -Property Score -Descending | Format-Table -AutoSize
+    $results | Sort-Object -Property Score -Descending | Select-Object -First $Top | Format-Table -AutoSize
 }
