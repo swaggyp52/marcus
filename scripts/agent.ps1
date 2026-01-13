@@ -26,7 +26,7 @@
 
 param(
     [Parameter(Position=0)]
-    [ValidateSet("builddoctor", "bughunter", "refactorer", "testwriter", "docindexer", "releasesheriff", "workspace-new", "workspace-index", "workspace-add", "workspace-search", "workspace-summarize", "help")]
+    [ValidateSet("builddoctor", "bughunter", "refactorer", "testwriter", "docindexer", "releasesheriff", "workspace-new", "workspace-index", "workspace-add", "workspace-search", "workspace-summarize", "workspace-plan", "workspace-quiz", "help")]
     [string]$Agent = "help",
     
     [string]$Issue,
@@ -39,6 +39,7 @@ param(
     [string]$Path,
     [string[]]$Paths,
     [string]$Query,
+    [int]$Count = 15,
     [switch]$DryRun,
     [switch]$Force,
     [switch]$SkipIndex,
@@ -108,6 +109,8 @@ function Show-Usage {
     Write-Host "  workspace-add       Add files to a workspace" -ForegroundColor Gray
     Write-Host "  workspace-search    Search workspace files" -ForegroundColor Gray
     Write-Host "  workspace-summarize Generate BRIEF/KEY_TERMS/OPEN_QUESTIONS" -ForegroundColor Gray
+    Write-Host "  workspace-plan      Generate STUDY_PLAN/NEXT_ACTIONS" -ForegroundColor Gray
+    Write-Host "  workspace-quiz      Generate practice quiz" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Other:" -ForegroundColor Cyan
     Write-Host "  help             Show this message" -ForegroundColor Gray
@@ -232,6 +235,39 @@ if ($Agent -eq "workspace-summarize") {
         Name = $Name
     }
     & $workspaceSummarizeScript @summarizeParams
+    exit 0
+}
+
+if ($Agent -eq "workspace-plan") {
+    $workspacePlanScript = Join-Path $PSScriptRoot "workspace_plan.ps1"
+    if (-not (Test-Path $workspacePlanScript)) {
+        throw "workspace_plan.ps1 not found: $workspacePlanScript"
+    }
+    if (-not $Name) {
+        throw "workspace-plan requires -Name parameter"
+    }
+    Write-Host "[OK] Invoking workspace-plan..." -ForegroundColor Green
+    $planParams = @{
+        Name = $Name
+    }
+    & $workspacePlanScript @planParams
+    exit 0
+}
+
+if ($Agent -eq "workspace-quiz") {
+    $workspaceQuizScript = Join-Path $PSScriptRoot "workspace_quiz.ps1"
+    if (-not (Test-Path $workspaceQuizScript)) {
+        throw "workspace_quiz.ps1 not found: $workspaceQuizScript"
+    }
+    if (-not $Name) {
+        throw "workspace-quiz requires -Name parameter"
+    }
+    Write-Host "[OK] Invoking workspace-quiz..." -ForegroundColor Green
+    $quizParams = @{
+        Name = $Name
+        Count = $Count
+    }
+    & $workspaceQuizScript @quizParams
     exit 0
 }
 
